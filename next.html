@@ -1,21 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ljubapp - Next</title>
+  <title>Ljubapp - Main</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       text-align: center;
-      padding: 40px;
+      padding: 20px;
       background-color: #151259;
       color: white;
+    }
+    #countdown {
+      font-size: 2em;
+      margin-top: 40px;
+    }
+    img {
+      max-width: 80%;
+      height: auto;
+      margin-top: 40px;
+    }
+    .ingredient {
+      display: flex;
+      justify-content: space-between;
+      margin: 10px 0;
+      background: #222266;
+      padding: 10px;
+      border-radius: 8px;
+    }
+    button {
+      margin-left: 10px;
+      background: white;
+      color: #151259;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 8px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <h1>Welcome to the next page!</h1>
-  <p>This is where your app content begins.</p>
+  <h1>Ljubapp</h1>
+  <div id="content"></div>
+
+  <script>
+    // ---------- CONFIG ----------
+    const travelStartHour = 6;
+    const travelEndHour = 15; // 3pm
+    const targetDate = new Date("2025-11-26T00:00:00+02:00"); // Nov 26 GMT+2
+
+    const ingredients = [
+      { name: "Tomatoes", checked: false },
+      { name: "Pasta", checked: false },
+      { name: "Cheese", checked: false },
+      { name: "Amatriciana sauce", checked: false },
+      { name: "Tiramisu ingredients", checked: false }
+    ];
+
+    // ---------- HELPER FUNCTIONS ----------
+    function showCountdown() {
+      const now = new Date();
+      let diff = targetDate - now;
+      if (diff < 0) diff = 0;
+
+      const days = Math.floor(diff / (1000*60*60*24));
+      const hours = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
+
+      document.getElementById('content').innerHTML = `
+        <p>Countdown to Nov 26:</p>
+        <div id="countdown">${days} days, ${hours} hours</div>
+      `;
+    }
+
+    function showTraveling() {
+      document.getElementById('content').innerHTML = `
+        <p>I'm travelling towards you ❤️</p>
+        <img src="assets/traveling.gif" alt="Traveling animation">
+      `;
+    }
+
+    function showGroceryGame() {
+      let html = "<h2>Grocery Store Challenge 🛒</h2>";
+      html += "<p>Check off the ingredients you find! Most checked wins a reward.</p>";
+      ingredients.forEach((item, index) => {
+        html += `<div class="ingredient">${item.name} <button onclick="checkItem(${index})">Check</button></div>`;
+      });
+      document.getElementById('content').innerHTML = html;
+    }
+
+    function checkItem(index) {
+      ingredients[index].checked = true;
+      showGroceryGame(); // re-render
+      localStorage.setItem('grocery', JSON.stringify(ingredients));
+    }
+
+    function loadGroceryProgress() {
+      const saved = localStorage.getItem('grocery');
+      if (saved) {
+        const arr = JSON.parse(saved);
+        arr.forEach((item, index) => ingredients[index].checked = item.checked);
+      }
+    }
+
+    // ---------- MAIN LOGIC ----------
+    function init() {
+      loadGroceryProgress();
+      const now = new Date();
+      const hour = now.getHours();
+      const day = now.getDate();
+      const month = now.getMonth() + 1;
+
+      if (month < 11 || (month === 11 && day < 26)) {
+        showCountdown();
+      } else if (month === 11 && day === 26 && hour >= travelStartHour && hour < travelEndHour) {
+        showTraveling();
+      } else if (month === 11 && day === 26 && hour >= travelEndHour) {
+        showGroceryGame();
+      } else {
+        document.getElementById('content').innerHTML = "<p>More fun coming soon! 🎉</p>";
+      }
+    }
+
+    init();
+  </script>
 </body>
 </html>
