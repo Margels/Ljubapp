@@ -12,15 +12,38 @@
       background-color: #151259;
       color: white;
     }
-    #countdown {
-      font-size: 2em;
+
+    #countdown-container {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
       margin-top: 40px;
     }
+
+    .countdown-box {
+      background-color: rgba(255, 255, 255, 0.5); /* 0.5 opacity */
+      border-radius: 12px;
+      padding: 15px 20px;
+      min-width: 60px;
+      font-size: 1.5em;
+      font-weight: bold;
+      color: #151259;
+    }
+
+    .countdown-label {
+      display: block;
+      font-size: 0.6em;
+      margin-top: 5px;
+      color: white;
+      opacity: 0.8;
+    }
+
     img {
       max-width: 80%;
       height: auto;
       margin-top: 40px;
     }
+
     .ingredient {
       display: flex;
       justify-content: space-between;
@@ -29,6 +52,7 @@
       padding: 10px;
       border-radius: 8px;
     }
+
     button {
       margin-left: 10px;
       background: white;
@@ -41,7 +65,6 @@
   </style>
 </head>
 <body>
-  <h1>Ljubapp</h1>
   <div id="content"></div>
 
   <script>
@@ -59,6 +82,10 @@
     ];
 
     // ---------- HELPER FUNCTIONS ----------
+    function formatNumber(n) {
+      return n.toString().padStart(2, '0');
+    }
+
     function showCountdown() {
       const now = new Date();
       let diff = targetDate - now;
@@ -66,10 +93,17 @@
 
       const days = Math.floor(diff / (1000*60*60*24));
       const hours = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
+      const minutes = Math.floor((diff % (1000*60*60)) / (1000*60));
+      const seconds = Math.floor((diff % (1000*60)) / 1000);
 
       document.getElementById('content').innerHTML = `
         <p>Countdown to Nov 26:</p>
-        <div id="countdown">${days} days, ${hours} hours</div>
+        <div id="countdown-container">
+          <div class="countdown-box">${formatNumber(days)}<span class="countdown-label">Days</span></div>
+          <div class="countdown-box">${formatNumber(hours)}<span class="countdown-label">Hours</span></div>
+          <div class="countdown-box">${formatNumber(minutes)}<span class="countdown-label">Minutes</span></div>
+          <div class="countdown-box">${formatNumber(seconds)}<span class="countdown-label">Seconds</span></div>
+        </div>
       `;
     }
 
@@ -113,6 +147,8 @@
 
       if (month < 11 || (month === 11 && day < 26)) {
         showCountdown();
+        // Update countdown every second
+        setInterval(showCountdown, 1000);
       } else if (month === 11 && day === 26 && hour >= travelStartHour && hour < travelEndHour) {
         showTraveling();
       } else if (month === 11 && day === 26 && hour >= travelEndHour) {
