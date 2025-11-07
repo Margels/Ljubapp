@@ -85,19 +85,23 @@
     function formatNumber(n) {
       return n.toString().padStart(2, '0');
     }
-
+    
     function showCountdown() {
       const now = new Date();
       let diff = targetDate - now;
       if (diff < 0) diff = 0;
-
+    
       const days = Math.floor(diff / (1000*60*60*24));
       const hours = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
       const minutes = Math.floor((diff % (1000*60*60)) / (1000*60));
       const seconds = Math.floor((diff % (1000*60)) / 1000);
-
+    
       document.getElementById('content').innerHTML = `
-        <p>Countdown to good food, scratchies and adventures:</p>
+        <div style="text-align: center; max-width: 400px; margin: 0 auto;">
+          <h2>Hey, you're a bit early!</h2>
+          <p>Come back later for endless activities, games and most importantly, heaps of fun!</p>
+          <p><strong>Countdown to good food, scratchies and adventures:</strong></p>
+        </div>
         <div id="countdown-container">
           <div class="countdown-box">${formatNumber(days)}<span class="countdown-label">Days</span></div>
           <div class="countdown-box">${formatNumber(hours)}<span class="countdown-label">Hours</span></div>
@@ -106,6 +110,7 @@
         </div>
       `;
     }
+
 
     function showTraveling() {
       document.getElementById('content').innerHTML = `
