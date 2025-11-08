@@ -104,7 +104,7 @@
     const travelDay = 09; // 26 November
     const travelStartHour = 6; // 6am
     const travelEndHour = 15; // 3pm
-    const targetDate = new Date("2025-11-26T00:00:00+02:00"); // Nov 26 GMT+2
+    const targetDate = new Date("2025-11-09T12:00:00+02:00"); // Nov 26 GMT+2
 
     // ---------- HELPER FUNCTIONS ----------
     function formatNumber(n) {
@@ -203,12 +203,12 @@
       const isTravelDayAndTravelTime = (month === 11 && day === travelDay && hour >= travelStartHour && hour < travelEndHour);
       const isTravelDayPastTravelTime = (month === 11 && day === travelDay && hour >= travelEndHour);
 
-      if isBeforeTravelDayAndTime {
+      if (isBeforeTravelDayAndTime) {
         showCountdown();
         setInterval(showCountdown, 1000);
-      } else if isTravelDayAndTravelTime {
+      } else if (isTravelDayAndTravelTime) {
         showTraveling();
-      } else if isTravelDayPastTravelTime {
+      } else if (isTravelDayPastTravelTime) {
         showGroceryGame();
       } else {
         document.getElementById('content').innerHTML = "<p>More fun coming soon! 🎉</p>";
