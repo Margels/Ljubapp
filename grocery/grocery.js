@@ -14,7 +14,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 // --- VARIABLES ---
-const username = prompt("Enter your name 👋"); // you and your bf can enter different names
+const username = localStorage.getItem("playerName") || prompt("Enter your name 👋");
 const ingredientsContainer = document.getElementById("ingredients");
 const pointsDisplay = document.getElementById("points");
 let points = 0;
