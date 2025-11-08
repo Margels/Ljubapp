@@ -44,15 +44,6 @@
       margin-top: 40px;
     }
 
-    .ingredient {
-      display: flex;
-      justify-content: space-between;
-      margin: 10px 0;
-      background: #222266;
-      padding: 10px;
-      border-radius: 8px;
-    }
-
     button {
       margin-left: 10px;
       background: white;
@@ -62,6 +53,38 @@
       border-radius: 8px;
       cursor: pointer;
     }
+
+    <!-- Add this new CSS block under your <style> -->
+    .player-option {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 10px;
+      background-color: rgba(255, 255, 255, 0.2);
+      padding: 12px;
+      border-radius: 12px;
+      margin: 10px 0;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .player-option input[type="radio"] {
+      accent-color: #151259;
+      transform: scale(1.2);
+    }
+    
+    .player-option.selected {
+      background-color: white;
+      color: #151259;
+    }
+    
+    .description {
+      text-align: left;
+      max-width: 480px;
+      margin: 0 auto;
+      line-height: 1.5em;
+    }
+
   </style>
 </head>
 <body>
@@ -121,26 +144,53 @@
     }
 
     function showGroceryGame() {
-      let html = "<h2>Grocery Store Challenge 🛒</h2>";
-      html += "<p>Check off the ingredients you find! Most checked wins a reward.</p>";
-      ingredients.forEach((item, index) => {
-        html += `<div class="ingredient">${item.name} <button onclick="checkItem(${index})">Check</button></div>`;
-      });
-      document.getElementById('content').innerHTML = html;
+      const content = document.getElementById('content');
+      content.innerHTML = `
+        <div style="max-width: 500px; margin: 0 auto; text-align: center;">
+          <h2>Let the fun begin 🎉</h2>
+          <p class="description">
+            The <strong>first challenge</strong> you will face today is to obtain all the items needed before the retreat to your <strong>beautiful love nest</strong>. 
+            Not your favourite activity... I know. <br><br>
+            But I heard you're a <strong>competitive one</strong>, right? So here's the deal: 
+            I'll give you a list of all the ingredients you need to get and both of you will go for the chase. 
+            <strong>Tick off each item</strong> you get. The one who gets the most items in the cart, <strong>wins</strong>! <br><br>
+            The prize? My, you're a greedy one... well, you can choose between <strong>4 of them</strong>, if that consoles you. 
+            Be patient and you'll find out what's in store for you!
+          </p>
+    
+          <h3 style="margin-top: 40px;">Who is playing?</h3>
+          <div id="players">
+            <div class="player-option" onclick="selectPlayer('Martina')">
+              <input type="radio" name="player" id="martinaRadio">
+              <label for="martinaRadio">Martina</label>
+            </div>
+            <div class="player-option" onclick="selectPlayer('Renato')">
+              <input type="radio" name="player" id="renatoRadio">
+              <label for="renatoRadio">Renato</label>
+            </div>
+          </div>
+    
+          <button id="startGameBtn" style="margin-top: 30px; display: none;">Start the Challenge 🛒</button>
+        </div>
+      `;
     }
-
-    function checkItem(index) {
-      ingredients[index].checked = true;
-      showGroceryGame(); // re-render
-      localStorage.setItem('grocery', JSON.stringify(ingredients));
-    }
-
-    function loadGroceryProgress() {
-      const saved = localStorage.getItem('grocery');
-      if (saved) {
-        const arr = JSON.parse(saved);
-        arr.forEach((item, index) => ingredients[index].checked = item.checked);
-      }
+    
+    function selectPlayer(name) {
+      document.querySelectorAll('.player-option').forEach(div => div.classList.remove('selected'));
+      const selected = Array.from(document.querySelectorAll('.player-option'))
+        .find(div => div.textContent.includes(name));
+      selected.classList.add('selected');
+    
+      // Store player locally
+      localStorage.setItem('playerName', name);
+    
+      // Show start button
+      const startBtn = document.getElementById('startGameBtn');
+      startBtn.style.display = 'inline-block';
+      startBtn.onclick = () => {
+        // Redirect to grocery.html (your real-time Firebase game)
+        window.location.href = 'grocery/grocery.html';
+      };
     }
 
     // ---------- MAIN LOGIC ----------
