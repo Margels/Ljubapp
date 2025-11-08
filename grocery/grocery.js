@@ -20,7 +20,7 @@ const pointsDisplay = document.getElementById("points");
 let points = 0;
 
 // --- LOAD INGREDIENTS FROM JSON ---
-fetch("files/ingredients.json")
+fetch("../files/ingredients.json")
   .then(res => res.json())
   .then(ingredients => {
     ingredients.forEach(name => {
