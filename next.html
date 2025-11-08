@@ -21,7 +21,7 @@
     }
 
     .countdown-box {
-      background-color: rgba(255, 255, 255, 0.5); /* 0.5 opacity */
+      background-color: rgba(255, 255, 255, 0.5);
       border-radius: 12px;
       padding: 15px 20px;
       min-width: 60px;
@@ -44,17 +44,7 @@
       margin-top: 40px;
     }
 
-    button {
-      margin-left: 10px;
-      background: white;
-      color: #151259;
-      border: none;
-      padding: 5px 10px;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    <!-- Add this new CSS block under your <style> -->
+    /* PLAYER TILE STYLE */
     .player-option {
       display: flex;
       align-items: center;
@@ -66,18 +56,22 @@
       margin: 10px 0;
       cursor: pointer;
       transition: all 0.2s ease;
+      text-align: left;
+      max-width: 300px;
+      margin-left: auto;
+      margin-right: auto;
     }
-    
+
     .player-option input[type="radio"] {
       accent-color: #151259;
       transform: scale(1.2);
     }
-    
+
     .player-option.selected {
       background-color: white;
       color: #151259;
     }
-    
+
     .description {
       text-align: left;
       max-width: 480px;
@@ -85,6 +79,21 @@
       line-height: 1.5em;
     }
 
+    button {
+      margin-top: 30px;
+      background-color: white;
+      color: #151259;
+      padding: 12px 25px;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.1s ease;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+    }
   </style>
 </head>
 <body>
@@ -92,34 +101,26 @@
 
   <script>
     // ---------- CONFIG ----------
-    const travelDay = 8; // 26 Nov
-    const travelStartHour = 5; // Midnight
+    const travelDay = 26; // 26 November
+    const travelStartHour = 6; // 6am
     const travelEndHour = 15; // 3pm
     const targetDate = new Date("2025-11-26T00:00:00+02:00"); // Nov 26 GMT+2
-
-    const ingredients = [
-      { name: "Tomatoes", checked: false },
-      { name: "Pasta", checked: false },
-      { name: "Cheese", checked: false },
-      { name: "Amatriciana sauce", checked: false },
-      { name: "Tiramisu ingredients", checked: false }
-    ];
 
     // ---------- HELPER FUNCTIONS ----------
     function formatNumber(n) {
       return n.toString().padStart(2, '0');
     }
-    
+
     function showCountdown() {
       const now = new Date();
       let diff = targetDate - now;
       if (diff < 0) diff = 0;
-    
+
       const days = Math.floor(diff / (1000*60*60*24));
       const hours = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
       const minutes = Math.floor((diff % (1000*60*60)) / (1000*60));
       const seconds = Math.floor((diff % (1000*60)) / 1000);
-    
+
       document.getElementById('content').innerHTML = `
         <div style="text-align: center; max-width: 400px; margin: 0 auto;">
           <h2>Hey, you're a bit early!</h2>
@@ -134,7 +135,6 @@
         </div>
       `;
     }
-
 
     function showTraveling() {
       document.getElementById('content').innerHTML = `
@@ -157,7 +157,7 @@
             The prize? My, you're a greedy one... well, you can choose between <strong>4 of them</strong>, if that consoles you. 
             Be patient and you'll find out what's in store for you!
           </p>
-    
+
           <h3 style="margin-top: 40px;">Who is playing?</h3>
           <div id="players">
             <div class="player-option" onclick="selectPlayer('Martina')">
@@ -169,33 +169,31 @@
               <label for="renatoRadio">Renato</label>
             </div>
           </div>
-    
+
           <button id="startGameBtn" style="margin-top: 30px; display: none;">Start the Challenge 🛒</button>
         </div>
       `;
     }
-    
+
     function selectPlayer(name) {
       document.querySelectorAll('.player-option').forEach(div => div.classList.remove('selected'));
       const selected = Array.from(document.querySelectorAll('.player-option'))
         .find(div => div.textContent.includes(name));
       selected.classList.add('selected');
-    
+
       // Store player locally
       localStorage.setItem('playerName', name);
-    
+
       // Show start button
       const startBtn = document.getElementById('startGameBtn');
       startBtn.style.display = 'inline-block';
       startBtn.onclick = () => {
-        // Redirect to grocery.html (your real-time Firebase game)
         window.location.href = 'grocery/grocery.html';
       };
     }
 
     // ---------- MAIN LOGIC ----------
     function init() {
-      loadGroceryProgress();
       const now = new Date();
       const hour = now.getHours();
       const day = now.getDate();
@@ -203,7 +201,6 @@
 
       if (month < 11 || (month === 11 && day < travelDay)) {
         showCountdown();
-        // Update countdown every second
         setInterval(showCountdown, 1000);
       } else if (month === 11 && day === travelDay && hour >= travelStartHour && hour < travelEndHour) {
         showTraveling();
@@ -218,3 +215,4 @@
   </script>
 </body>
 </html>
+
