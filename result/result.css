@@ -42,25 +42,19 @@ p {
 
 #prizeGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 1.2rem;
-  justify-items: center;
-  width: 100%;
-  max-width: 500px;
-  margin: 0 auto;
-  padding: 0.5rem;
+  justify-items: stretch; /* ensures they fill each column evenly */
 }
 
 .prize-card {
-  width: 100%;
-  max-width: 200px;
   background-color: rgba(255, 255, 255, 0.2);
   border-radius: 16px;
   padding: 1.2rem;
   color: white;
   transition: all 0.3s ease;
   cursor: pointer;
-  box-sizing: border-box;
+  text-align: center;
 }
 
 .prize-card.selected {
