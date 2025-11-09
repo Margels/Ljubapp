@@ -100,6 +100,8 @@ async function endGame() {
   db.ref("gameSummary").on("value", snapshot => {
     const summary = snapshot.val();
     if (summary) {
+      // Stop listener
+      summaryRef.off();
       // Show alert
       alert("Both players are done! Calculating results...");
       // Save data
