@@ -100,124 +100,135 @@
   <div id="content"></div>
 
   <script>
-    // ---------- CONFIG ----------
-    const travelDay = 09; // 26 November
-    const travelStartHour = 0; // 6am
-    const travelEndHour = 1; // 3pm
-    const targetDate = new Date("2025-11-26T14:00:00+02:00"); // Nov 26 GMT+2
+  // ---------- CONFIG ----------
+  const travelDay = 9; // 26 November
+  const travelStartHour = 0; // 6am
+  const travelEndHour = 1; // 3pm
+  const targetDate = new Date("2025-11-26T14:00:00+02:00"); // Nov 26 GMT+2
 
-    // ---------- HELPER FUNCTIONS ----------
-    function formatNumber(n) {
-      return n.toString().padStart(2, '0');
-    }
+  // ---------- HELPER FUNCTIONS ----------
+  function formatNumber(n) {
+    return n.toString().padStart(2, '0');
+  }
 
-    function showCountdown() {
-      const now = new Date();
-      let diff = targetDate - now;
-      if (diff < 0) diff = 0;
+  function showCountdown() {
+    const now = new Date();
+    let diff = targetDate - now;
+    if (diff < 0) diff = 0;
 
-      const days = Math.floor(diff / (1000*60*60*24));
-      const hours = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
-      const minutes = Math.floor((diff % (1000*60*60)) / (1000*60));
-      const seconds = Math.floor((diff % (1000*60)) / 1000);
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-      document.getElementById('content').innerHTML = `
-        <div style="text-align: center; max-width: 400px; margin: 0 auto;">
-          <h2>Hey, you're a bit early!</h2>
-          <p>Come back later for endless activities, games and most importantly, heaps of fun!</p>
-          <p><strong>Countdown to good food, scratchies and adventures:</strong></p>
-        </div>
-        <div id="countdown-container">
-          <div class="countdown-box">${formatNumber(days)}<span class="countdown-label">Days</span></div>
-          <div class="countdown-box">${formatNumber(hours)}<span class="countdown-label">Hours</span></div>
-          <div class="countdown-box">${formatNumber(minutes)}<span class="countdown-label">Minutes</span></div>
-          <div class="countdown-box">${formatNumber(seconds)}<span class="countdown-label">Seconds</span></div>
-        </div>
-      `;
-    }
+    document.getElementById('content').innerHTML = `
+      <div style="text-align: center; max-width: 400px; margin: 0 auto;">
+        <h2>Hey, you're a bit early!</h2>
+        <p>Come back later for endless activities, games and most importantly, heaps of fun!</p>
+        <p><strong>Countdown to good food, scratchies and adventures:</strong></p>
+      </div>
+      <div id="countdown-container">
+        <div class="countdown-box">${formatNumber(days)}<span class="countdown-label">Days</span></div>
+        <div class="countdown-box">${formatNumber(hours)}<span class="countdown-label">Hours</span></div>
+        <div class="countdown-box">${formatNumber(minutes)}<span class="countdown-label">Minutes</span></div>
+        <div class="countdown-box">${formatNumber(seconds)}<span class="countdown-label">Seconds</span></div>
+      </div>
+    `;
+  }
 
-    function showTraveling() {
-      document.getElementById('content').innerHTML = `
-        <p>I'm travelling towards you ✈️🌍❤️</p>
-        <img src="assets/traveling.gif" alt="Traveling animation">
-      `;
-    }
+  function showTraveling() {
+    document.getElementById('content').innerHTML = `
+      <p>I'm travelling towards you ✈️🌍❤️</p>
+      <img src="assets/traveling.gif" alt="Traveling animation">
+    `;
+  }
 
-    function showGroceryGame() {
-      const content = document.getElementById('content');
-      content.innerHTML = `
-        <div style="max-width: 500px; margin: 0 auto; text-align: center;">
-          <h2>Let the fun begin 🎉</h2>
-          <p class="description">
-            The <strong>first challenge</strong> is ready for you! You will have to retrieve a few items before you can finally retreat to your beautiful love nest. That can only mean one thing: <strong>grocery shopping</strong>! 🛒 <br><br> 
-            Not your favourite activity... I know. But I heard <strong>you're a competitive one</strong>, right? Here's the deal: <br><br>
-            In the next page, you will find the shopping list for the weekend. Your goal is to <strong>find as many items as you can and tick them off the list</strong> before your rival does.
-            The player who gets the most items in the cart, <strong>wins</strong>! 🏆 <br><br>
-            The prize? My, you're a greedy one... <br>
-            For this and each quest that you win, you will collect <strong>points which translate into minutes of scratchies</strong>! <br> The minimum amount of points that you can claim is 10. <br>
-            Alternatively, you can decide to exchange those points for a different prize of your choosing - options will vary for each challenge, so be careful! <br><br>
-            Curious to find out what's in store for you? All you have to do now is play! 🕹️
-          </p>
+  function showGroceryGame() {
+    const content = document.getElementById('content');
+    content.innerHTML = `
+      <div style="max-width: 500px; margin: 0 auto; text-align: center;">
+        <h2>Let the fun begin 🎉</h2>
+        <p class="description">
+          The <strong>first challenge</strong> is ready for you! You will have to retrieve a few items before you can finally retreat to your beautiful love nest. That can only mean one thing: <strong>grocery shopping</strong>! 🛒 <br><br> 
+          Not your favourite activity... I know. But I heard <strong>you're a competitive one</strong>, right? Here's the deal: <br><br>
+          In the next page, you will find the shopping list for the weekend. Your goal is to <strong>find as many items as you can and tick them off the list</strong> before your rival does.
+          The player who gets the most items in the cart, <strong>wins</strong>! 🏆 <br><br>
+          The prize? My, you're a greedy one... <br>
+          For this and each quest that you win, you will collect <strong>points which translate into minutes of scratchies</strong>! <br> The minimum amount of points that you can claim is 10. <br>
+          Alternatively, you can decide to exchange those points for a different prize of your choosing - options will vary for each challenge, so be careful! <br><br>
+          Curious to find out what's in store for you? All you have to do now is play! 🕹️
+        </p>
 
-          <h3 style="margin-top: 40px;">Who is playing?</h3>
-          <div id="players">
-            <div class="player-option" onclick="selectPlayer('Martina')">
-              <input type="radio" name="player" id="martinaRadio">
-              <label for="martinaRadio">Martina</label>
-            </div>
-            <div class="player-option" onclick="selectPlayer('Renato')">
-              <input type="radio" name="player" id="renatoRadio">
-              <label for="renatoRadio">Renato</label>
-            </div>
+        <h3 style="margin-top: 40px;">Who is playing?</h3>
+        <div id="players">
+          <div class="player-option" data-player="Martina">
+            <input type="radio" name="player" id="martinaRadio">
+            <label for="martinaRadio">Martina</label>
           </div>
-
-          <button id="startGameBtn" style="margin-top: 30px; display: none;">Start the Challenge 🛒</button>
+          <div class="player-option" data-player="Renato">
+            <input type="radio" name="player" id="renatoRadio">
+            <label for="renatoRadio">Renato</label>
+          </div>
         </div>
-      `;
+
+        <button id="startGameBtn" style="margin-top: 30px; display: none;">Start the Challenge 🛒</button>
+      </div>
+    `;
+
+    // Add click listeners to player tiles
+    document.querySelectorAll('.player-option').forEach(option => {
+      option.addEventListener('click', () => {
+        // Remove selection from all
+        document.querySelectorAll('.player-option').forEach(opt => {
+          opt.classList.remove('selected');
+          opt.querySelector('input[type="radio"]').checked = false;
+        });
+
+        // Mark this one as selected
+        option.classList.add('selected');
+        const radio = option.querySelector('input[type="radio"]');
+        radio.checked = true;
+
+        // Store selection
+        const playerName = option.dataset.player;
+        localStorage.setItem('playerName', playerName);
+
+        // Show start button
+        const startBtn = document.getElementById('startGameBtn');
+        startBtn.style.display = 'inline-block';
+        startBtn.onclick = () => {
+          window.location.href = 'grocery/grocery.html';
+        };
+      });
+    });
+  }
+
+  // ---------- MAIN LOGIC ----------
+  function init() {
+    const now = new Date();
+    const hour = now.getHours();
+    const day = now.getDate();
+    const month = now.getMonth() + 1;
+
+    const isBeforeTravelDayAndTime = (month < 11 || (month === 11 && day < travelDay) || (month === 11 && day === travelDay && hour <= travelStartHour));
+    const isTravelDayAndTravelTime = (month === 11 && day === travelDay && hour >= travelStartHour && hour < travelEndHour);
+    const isTravelDayPastTravelTime = (month === 11 && day === travelDay && hour >= travelEndHour);
+
+    if (isBeforeTravelDayAndTime) {
+      showCountdown();
+      setInterval(showCountdown, 1000);
+    } else if (isTravelDayAndTravelTime) {
+      showTraveling();
+    } else if (isTravelDayPastTravelTime) {
+      showGroceryGame();
+    } else {
+      document.getElementById('content').innerHTML = "<p>More fun coming soon! 🎉</p>";
     }
+  }
 
-    function selectPlayer(name) {
-      document.querySelectorAll('.player-option').forEach(div => div.classList.remove('selected'));
-      const selected = Array.from(document.querySelectorAll('.player-option'))
-        .find(div => div.textContent.includes(name));
-      selected.classList.add('selected');
+  init();
+</script>
 
-      // Store player locally
-      localStorage.setItem('playerName', name);
-
-      // Show start button
-      const startBtn = document.getElementById('startGameBtn');
-      startBtn.style.display = 'inline-block';
-      startBtn.onclick = () => {
-        window.location.href = 'grocery/grocery.html';
-      };
-    }
-
-    // ---------- MAIN LOGIC ----------
-    function init() {
-      const now = new Date();
-      const hour = now.getHours();
-      const day = now.getDate();
-      const month = now.getMonth() + 1;
-
-      const isBeforeTravelDayAndTime = (month < 11 || (month === 11 && day < travelDay) || (month === 11 && day === travelDay && hour <= travelStartHour));
-      const isTravelDayAndTravelTime = (month === 11 && day === travelDay && hour >= travelStartHour && hour < travelEndHour);
-      const isTravelDayPastTravelTime = (month === 11 && day === travelDay && hour >= travelEndHour);
-
-      if (isBeforeTravelDayAndTime) {
-        showCountdown();
-        setInterval(showCountdown, 1000);
-      } else if (isTravelDayAndTravelTime) {
-        showTraveling();
-      } else if (isTravelDayPastTravelTime) {
-        showGroceryGame();
-      } else {
-        document.getElementById('content').innerHTML = "<p>More fun coming soon! 🎉</p>";
-      }
-    }
-
-    init();
-  </script>
 </body>
 </html>
 
