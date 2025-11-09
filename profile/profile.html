@@ -1,21 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Profile</title>
-  <link rel="stylesheet" href="profile.css" />
+  <link rel="stylesheet" href="profile.css">
 </head>
 <body>
   <div class="profile-container">
-    <img id="profileImage" src="../assets/martina.png" alt="Profile Photo" />
-    <h1 id="profileName">Martina</h1>
+    <img id="profileImage" src="" alt="Profile Photo" />
+    <h1 id="profileName"></h1>
     <p class="total-points">🎯 Total points: <span id="totalPoints">0</span></p>
 
     <h2 class="section-title">Prize collection history:</h2>
-    <div id="prizeHistory" class="prize-history"></div>
+    <div id="prizeHistory" class="prize-history">
+      <p id="emptyMessage" class="empty-message hidden">
+        There is nothing here yet! Keep playing and come back later.
+      </p>
+    </div>
   </div>
 
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
   <script src="profile.js"></script>
 </body>
 </html>
