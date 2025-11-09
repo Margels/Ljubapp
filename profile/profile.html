@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile</title>
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background-color: #f9f9f9;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .profile-image {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      object-fit: cover;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-size: 32px;
+      margin: 0;
+    }
+
+    .points {
+      font-size: 20px;
+      margin-top: 10px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <img id="profile-image" class="profile-image" src="../assets/martina.png" alt="Profile picture">
+  <h1 id="profile-name"></h1>
+  <p class="points" id="profile-points"></p>
+
+  <script>
+    // Retrieve user info
+    const winnerName = localStorage.getItem("winnerName") || "Guest";
+    const totalPoints = localStorage.getItem("totalPoints") || 0;
+
+    // Set name
+    document.getElementById("profile-name").textContent = winnerName;
+
+    // Set points
+    document.getElementById("profile-points").textContent = `🎯 Total points: ${totalPoints}`;
+
+    // Set image
+    const imageEl = document.getElementById("profile-image");
+    imageEl.src = `../assets/${winnerName.toLowerCase()}.png`;
+  </script>
+</body>
+</html>
