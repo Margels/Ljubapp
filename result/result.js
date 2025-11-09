@@ -95,7 +95,11 @@ confirmPrizeBtn.addEventListener("click", () => {
   localStorage.setItem("userPoints", userPoints);
 
   // Save claimed prize info for profile summary
-  localStorage.setItem("claimedPrize", JSON.stringify(selectedPrize));
+  const previous = JSON.parse(localStorage.getItem("claimedPrizes") || "[]");
+  selectedPrize.claimedAt = new Date().toISOString(); // timestamp
+  previous.push(selectedPrize);
+  localStorage.setItem("claimedPrizes", JSON.stringify(previous));
+
 
   // Redirect to profile page
   window.location.href = "../profile/profile.html"; // placeholder
