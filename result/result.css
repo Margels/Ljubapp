@@ -17,7 +17,7 @@ body {
 
 .result-container {
   max-width: 600px;
-  padding: 2rem;
+  padding: 0.5rem;
   width: 100%;
   box-sizing: border-box;
 }
@@ -55,7 +55,7 @@ p {
   grid-template-columns: repeat(2, 1fr);
   gap: 1.2rem;
   justify-content: center; /* centers the grid inside the container */
-  padding: 0 1rem;         /* equal padding left and right */
+  padding: 0 0.5rem;         /* equal padding left and right */
   box-sizing: border-box;
   width: 100%;
   max-width: 500px;        /* optional, keeps grid from stretching too wide */
