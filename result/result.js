@@ -37,7 +37,7 @@ db.ref("gameSummary").once("value").then(snapshot => {
   }
 
   resultText.textContent = `${winner} won with ${maxPoints} points!`;
-  pointsDisplay.textContent = `Your total: ${userPoints} points`;
+  pointsDisplay.textContent = `🎯 Total: ${userPoints}`;
 
   if (winner === username) {
     claimSection.classList.remove("hidden");
