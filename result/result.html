@@ -4,53 +4,29 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Game Results</title>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      text-align: center;
-      padding: 40px 20px;
-      background-color: #151259;
-      color: white;
-    }
-
-    h1 {
-      font-size: 2.2rem;
-      margin-bottom: 20px;
-    }
-
-    h2 {
-      font-size: 1.5rem;
-      margin-top: 10px;
-      margin-bottom: 20px;
-    }
-
-    .points-display {
-      font-size: 3rem;
-      font-weight: bold;
-      margin-top: 30px;
-      color: #FFD700; /* gold for emphasis */
-    }
-
-    .summary {
-      max-width: 480px;
-      margin: 0 auto;
-      text-align: center;
-      line-height: 1.5em;
-    }
-  </style>
+  <link rel="stylesheet" href="result.css">
 </head>
 <body>
+  <div class="result-container">
+    <h1 id="resultTitle"></h1>
+    <p id="resultText"></p>
 
-  <div class="summary">
-    <h1 id="resultTitle">Loading...</h1>
-    <h2 id="winnerText"></h2>
-    <div class="points-display" id="pointsDisplay">0</div>
+    <div id="pointsContainer">
+      <h2 id="pointsDisplay"></h2>
+    </div>
+
+    <div id="claimSection" class="hidden">
+      <h3>How would you like to claim your points?</h3>
+      <div id="prizeGrid"></div>
+    </div>
+
+    <button id="profileBtn" class="hidden">Go to profile summary</button>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
   <script src="result.js"></script>
-
 </body>
 </html>
+
 
