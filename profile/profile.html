@@ -1,16 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Profile</title>
-  <link rel="stylesheet" href="profile.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Profile</title>
+  <link rel="stylesheet" href="profile.css">
 </head>
 <body>
   <div class="profile-container">
-    <img id="profileImage" alt="Profile photo" />
+    <img id="profileImage" src="" alt="Profile Image" />
     <h1 id="profileName"></h1>
-    <p id="profilePoints"></p>
+    <p id="totalPoints"></p>
+
+    <div class="history-section">
+      <h2>Prize collection history:</h2>
+      <div id="prizeHistory"></div>
+    </div>
   </div>
 
   <script src="profile.js"></script>
