@@ -1,24 +1,46 @@
-/* --- Root fix for Safari/iPhone white bar issue --- */
-html, body {
-  font-family: 'Poppins', sans-serif;
+/* --- Base setup for gradient + iPhone safe areas --- */
+html {
   height: 100%;
+  background: linear-gradient(135deg, #151259, #363380);
+  background-attachment: fixed;
+  color: white;
+  -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
   min-height: 100vh;
   background: linear-gradient(135deg, #151259, #363380);
-  background-attachment: fixed; /* Keeps gradient fixed when scrolling */
-  color: white;
-  text-align: center;
   margin: 0;
-  padding: 0;
+  padding: 2rem 1rem 4rem 1rem; /* extra padding for bottom safe area */
+  text-align: center;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  justify-content: flex-start; /* content starts from top */
   align-items: center;
+  color: white;
   overflow-x: hidden;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -webkit-text-size-adjust: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Tint the Safari top/bottom bars to match */
+@supports (-webkit-touch-callout: none) {
+  body {
+    background-color: #151259;
+  }
+  html {
+    background-color: #151259;
+  }
 }
 
 /* --- Layout --- */
 .result-container {
   max-width: 600px;
-  padding: 2rem;
+  width: 100%;
 }
 
 /* --- Headings and text --- */
@@ -29,6 +51,7 @@ h1 {
 
 p {
   font-size: 1.2rem;
+  margin: 0.5rem 0;
 }
 
 /* --- Points display --- */
@@ -51,7 +74,7 @@ p {
 /* --- Prize grid --- */
 #prizeGrid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr); /* Two cards per row */
+  grid-template-columns: repeat(2, 1fr);
   gap: 1.2rem;
   justify-items: stretch;
   width: 100%;
