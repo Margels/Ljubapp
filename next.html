@@ -136,12 +136,35 @@
     `;
   }
 
-  function showTraveling() {
-    document.getElementById('content').innerHTML = `
-      <p>I'm travelling towards you ✈️🌍❤️</p>
-      <img src="assets/traveling.gif" alt="Traveling animation">
-    `;
-  }
+function showTraveling() {
+  fetch("files/fun-facts.json")
+    .then(response => response.json())
+    .then(facts => {
+      const randomFact = facts[Math.floor(Math.random() * facts.length)];
+      document.getElementById('content').innerHTML = `
+        <div style="max-width: 500px; margin: 0 auto; text-align: center;">
+          <h2 style="font-size: 1.8em; font-weight: bold; margin-bottom: 20px;">
+            I'm travelling towards you ✈️🌍❤️
+          </h2>
+          <img src="assets/traveling.gif" alt="Traveling animation">
+          <p style="margin-top: 20px; font-style: italic; font-size: 1em; opacity: 0.9;">
+            Fun fact: ${randomFact}
+          </p>
+        </div>
+      `;
+    })
+    .catch(error => {
+      console.error("Error loading fun facts:", error);
+      document.getElementById('content').innerHTML = `
+        <div style="max-width: 500px; margin: 0 auto; text-align: center;">
+          <h2 style="font-size: 1.8em; font-weight: bold; margin-bottom: 20px;">
+            I'm travelling towards you ✈️🌍❤️
+          </h2>
+          <img src="assets/traveling.gif" alt="Traveling animation">
+        </div>
+      `;
+    });
+}
 
   function showGroceryGame() {
     const content = document.getElementById('content');
