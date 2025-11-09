@@ -1,0 +1,98 @@
+body {
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg, #141E30, #243B55);
+  color: white;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.result-container {
+  max-width: 600px;
+  padding: 2rem;
+}
+
+h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+p {
+  font-size: 1.2rem;
+}
+
+#pointsDisplay {
+  font-size: 2.2rem;
+  margin-top: 1.5rem;
+  color: white; /* White instead of yellow */
+}
+
+#claimSection {
+  margin-top: 2rem;
+}
+
+#claimSection h3 {
+  font-size: 1.3rem;
+  margin-bottom: 1rem;
+}
+
+#prizeGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  justify-items: center;
+}
+
+.prize-card {
+  width: 90%;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  padding: 1.2rem;
+  color: white;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.prize-card.selected {
+  background-color: white;
+  color: #243B55;
+}
+
+.prize-emoji {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.prize-title {
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+}
+
+.prize-points {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+button {
+  background-color: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: white;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  margin-top: 2rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+button:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.hidden {
+  display: none;
+}
