@@ -98,7 +98,6 @@ async function endGame() {
       await db.ref("gameSummary").set({ winner, maxPoints });
 
       // Redirect everyone
-      alert("Both players are done! Calculating results...");
       localStorage.setItem("playerName", username);
       localStorage.setItem("userPoints", points);
       window.location.href = "../result/result.html";
