@@ -126,3 +126,13 @@ button:hover {
   transform: scale(1.03);
 }
 
+/* Add spacing above the confirm button */
+#confirmPrizeBtn {
+  margin-top: 2rem; /* new space above the button */
+}
+
+/* Optional: if you want to make sure disabled cards never change color */
+.prize-card.disabled:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: none;
+}
