@@ -1,6 +1,6 @@
 body {
   font-family: 'Poppins', sans-serif;
-  background-color: #151259;
+  background: linear-gradient(135deg, #151259, #363380);
   color: white;
   text-align: center;
   padding: 20px;
