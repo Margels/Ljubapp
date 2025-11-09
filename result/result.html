@@ -1,80 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Game Results</title>
-  <link rel="stylesheet" href="../grocery/grocery.css" />
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
   <style>
     body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      text-align: center;
+      padding: 40px 20px;
       background-color: #151259;
       color: white;
-      text-align: center;
-      font-family: 'Poppins', sans-serif;
-      padding: 30px;
     }
+
     h1 {
-      font-size: 2rem;
-      margin-bottom: 10px;
+      font-size: 2.2rem;
+      margin-bottom: 20px;
     }
-    .points {
-      margin-top: 30px;
-      font-size: 1.4rem;
+
+    h2 {
+      font-size: 1.5rem;
+      margin-top: 10px;
+      margin-bottom: 20px;
+    }
+
+    .points-display {
+      font-size: 3rem;
       font-weight: bold;
+      margin-top: 30px;
+      color: #FFD700; /* gold for emphasis */
+    }
+
+    .summary {
+      max-width: 480px;
+      margin: 0 auto;
+      text-align: center;
+      line-height: 1.5em;
     }
   </style>
 </head>
 <body>
-  <h1 id="resultTitle"></h1>
-  <p id="resultDetails"></p>
-  <p class="points" id="totalPoints"></p>
 
-  <script>
-    // --- CONFIGURE FIREBASE ---
-    const firebaseConfig = {
-      apiKey: "AIzaSyAhNkyI7aG6snk2hPergYyGdftBBN9M1h0",
-      authDomain: "ljubapp.firebaseapp.com",
-      databaseURL: "https://ljubapp-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "ljubapp",
-      storageBucket: "ljubapp.firebasestorage.app",
-      messagingSenderId: "922849938749",
-      appId: "1:922849938749:web:59c06714af609e478d0954"
-    };
+  <div class="summary">
+    <h1 id="resultTitle">Loading...</h1>
+    <h2 id="winnerText"></h2>
+    <div class="points-display" id="pointsDisplay">0</div>
+  </div>
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="result.js"></script>
 
-    async function loadResults() {
-      const userName = localStorage.getItem("playerName");
-      const winnerName = localStorage.getItem("winnerName");
-      const winnerPoints = parseInt(localStorage.getItem("winnerPoints")) || 0;
-      const userPoints = parseInt(localStorage.getItem("userPoints")) || 0;
-
-      // Fetch user’s total previous score
-      const totalRef = db.ref(`players/${userName}/totalPoints`);
-      const snapshot = await totalRef.once("value");
-      const oldTotal = snapshot.exists() ? snapshot.val() : 0;
-      const newTotal = oldTotal + userPoints;
-      await totalRef.set(newTotal);
-
-      const titleEl = document.getElementById("resultTitle");
-      const detailsEl = document.getElementById("resultDetails");
-      const totalEl = document.getElementById("totalPoints");
-
-      if (userName === winnerName) {
-        titleEl.textContent = "🎉 Congratulations, you won!";
-      } else {
-        titleEl.textContent = "🥀 Better luck next time!";
-      }
-
-      detailsEl.textContent = `${winnerName} won with ${winnerPoints} points!`;
-      totalEl.textContent = `Your total points: ${newTotal}`;
-    }
-
-    loadResults();
-  </script>
 </body>
 </html>
+
