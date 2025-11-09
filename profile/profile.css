@@ -2,34 +2,80 @@ body {
   font-family: 'Poppins', sans-serif;
   background-color: #151259;
   color: white;
-  text-align: center;
   margin: 0;
-  padding: 2rem;
+  padding: 0;
+  text-align: center;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   min-height: 100vh;
 }
 
 .profile-container {
-  max-width: 400px;
+  max-width: 600px;
+  padding: 2rem 1rem;
+  width: 100%;
 }
 
 #profileImage {
-  width: 200px;
-  height: 200px;
-  border-radius: 100px;
-  object-fit: cover;
+  width: 180px;
+  height: auto;
+  border-radius: 0; /* no circle */
   margin-bottom: 1.5rem;
-  border: 3px solid white;
 }
 
 #profileName {
   font-size: 2rem;
-  margin-bottom: 0.5rem;
+  font-weight: 600;
+  margin-bottom: 0.8rem;
 }
 
-#profilePoints {
-  font-size: 1.2rem;
+#totalPoints {
+  font-size: 1.1rem;
+  font-weight: 500; /* medium/semibold look */
+  margin-bottom: 2rem;
+}
+
+.history-section {
+  text-align: left;
+  margin-top: 1rem;
+}
+
+.history-section h2 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+/* Prize history tiles */
+.prize-tile {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.prize-tile.expired {
+  border: 2px solid #d6496a;
+}
+
+.prize-title {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.prize-meta {
+  font-size: 0.9rem;
   opacity: 0.9;
+}
+
+.expired-label {
+  color: #d6496a;
+  font-weight: 600;
+  font-size: 0.9rem;
 }
