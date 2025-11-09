@@ -58,18 +58,28 @@ function loadPrizes() {
         card.dataset.title = prize.title;
         card.dataset.points = prize.points;
 
+        const canAfford = userPoints >= prize.points;
+
         card.innerHTML = `
           <div class="prize-emoji">${prize.emoji}</div>
           <div class="prize-title">${prize.title}</div>
           <div class="prize-points">${prize.points} pts</div>
         `;
 
-        card.addEventListener("click", () => {
-          document.querySelectorAll(".prize-card").forEach(c => c.classList.remove("selected"));
-          card.classList.add("selected");
-          selectedPrize = prize;
-          confirmPrizeBtn.classList.remove("hidden");
-        });
+        if (!canAfford) {
+          // Greyed out and unselectable
+          card.classList.add("disabled");
+          card.style.opacity = "0.4";
+          card.style.cursor = "not-allowed";
+        } else {
+          // Only attach click handler if the player can afford it
+          card.addEventListener("click", () => {
+            document.querySelectorAll(".prize-card").forEach(c => c.classList.remove("selected"));
+            card.classList.add("selected");
+            selectedPrize = prize;
+            confirmPrizeBtn.classList.remove("hidden");
+          });
+        }
 
         prizeGrid.appendChild(card);
       });
