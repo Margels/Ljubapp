@@ -22,7 +22,6 @@ body {
   box-sizing: border-box;
 }
 
-
 h1 {
   font-size: 2.5rem;
   margin-bottom: 0.5rem;
@@ -54,11 +53,11 @@ p {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1.2rem;
-  justify-content: center; /* centers the grid inside the container */
-  padding: 0 0.5rem;         /* equal padding left and right */
+  justify-content: center; 
+  padding: 0 0.5rem;        
   box-sizing: border-box;
   width: 100%;
-  max-width: 500px;        /* optional, keeps grid from stretching too wide */
+  max-width: 500px;        
 }
 
 .prize-card {
@@ -70,7 +69,7 @@ p {
   transition: all 0.3s ease;
   cursor: pointer;
   text-align: center;
-  box-sizing: border-box;  /* ensures padding is counted inside width */
+  box-sizing: border-box;
 }
 
 .prize-card.selected {
