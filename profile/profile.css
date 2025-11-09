@@ -1,6 +1,6 @@
 body {
   font-family: 'Inter', sans-serif;
-  background-color: #151259;
+  background-color: #151259; /* solid background */
   color: white;
   display: flex;
   justify-content: center;
@@ -19,12 +19,12 @@ body {
 #profileImage {
   width: 150px;
   height: auto;
-  border-radius: 0; /* no circle */
+  border-radius: 0;
   margin-bottom: 20px;
 }
 
 .total-points {
-  font-weight: 500; /* semibold */
+  font-weight: 500; /* semi-bold */
   margin-bottom: 30px;
 }
 
@@ -52,12 +52,7 @@ body {
 }
 
 .prize-tile.expired {
-  animation: fadeExpired 1s ease forwards;
-}
-
-@keyframes fadeExpired {
-  from { opacity: 1; transform: scale(1); }
-  to { opacity: 0.4; transform: scale(0.98); }
+  opacity: 0.4;
 }
 
 .prize-info {
@@ -87,4 +82,14 @@ body {
   font-size: 0.85rem;
   color: rgba(255, 255, 255, 0.7);
   margin-left: 10px;
+}
+
+.empty-message {
+  text-align: center;
+  color: white;
+  opacity: 0.6;
+  margin-top: 20px;
+}
+.hidden {
+  display: none;
 }
