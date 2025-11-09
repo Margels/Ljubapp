@@ -233,7 +233,7 @@ function showTraveling() {
     const day = now.getDate();
     const month = now.getMonth() + 1;
 
-    const isBeforeTravelDayAndTime = (month < 11 || (month === 11 && day < travelDay) || (month === 11 && day === travelDay && hour <= travelStartHour));
+    const isBeforeTravelDayAndTime = (month < 11 || (month === 11 && day < travelDay) || (month === 11 && day === travelDay && hour < travelStartHour));
     const isTravelDayAndTravelTime = (month === 11 && day === travelDay && hour >= travelStartHour && hour < travelEndHour);
     const isTravelDayPastTravelTime = (month === 11 && day === travelDay && hour >= travelEndHour);
 
