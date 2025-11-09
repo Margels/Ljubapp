@@ -60,25 +60,40 @@ fetch("../files/ingredients.json")
     });
   });
 
-// --- GAME OVER ---
-function endGame() {
-  const resultsRef = db.ref("results/" + username);
-  resultsRef.set({ points });
+// --- GAME OVER LOGIC ---
+async function endGame() {
+  // Save player points in Firebase
+  await db.ref(`results/${username}`).set({ points });
 
-  db.ref("results").once("value").then(snapshot => {
-    const data = snapshot.val() || {};
-    let winner = "Nobody yet!";
-    let maxPoints = 0;
+  // Retrieve all players' results
+  const snapshot = await db.ref("results").once("value");
+  const data = snapshot.val() || {};
 
-    for (const [user, info] of Object.entries(data)) {
-      if (info.points > maxPoints) {
-        maxPoints = info.points;
-        winner = user;
-      }
+  // Determine winner
+  let winner = "Nobody yet!";
+  let maxPoints = 0;
+  for (const [user, info] of Object.entries(data)) {
+    if (info.points > maxPoints) {
+      maxPoints = info.points;
+      winner = user;
     }
+  }
 
-    alert(`🏁 Game Over! Winner: ${winner} with ${maxPoints} points!`);
+  // Save global winner info
+  await db.ref("gameSummary").set({
+    winner,
+    maxPoints,
+    allResults: data
   });
+
+  // Store locally for results page
+  localStorage.setItem("winnerName", winner);
+  localStorage.setItem("winnerPoints", maxPoints);
+  localStorage.setItem("userPoints", points);
+
+  // Redirect to result page
+  window.location.href = "../result/result.html";
 }
 
 document.getElementById("endBtn").addEventListener("click", endGame);
+
