@@ -76,42 +76,42 @@ async function endGame() {
     finished: true
   });
 
-  // Check all results
-  const resultsSnap = await db.ref("results").once("value");
-  const results = resultsSnap.val() || {};
+  // --- Polling for game summary ---
+  const checkSummary = async () => {
+    const resultsSnap = await db.ref("results").once("value");
+    const results = resultsSnap.val() || {};
 
-  const allFinished = Object.values(results).every(p => p.finished);
-  if (allFinished && Object.keys(results).length >= 2) {
-    // Determine winner
-    let winner = "Nobody";
-    let maxPoints = 0;
-    for (const [name, data] of Object.entries(results)) {
-      if (data.points > maxPoints) {
-        maxPoints = data.points;
-        winner = name;
+    // If both players finished
+    const allFinished = Object.values(results).every(p => p.finished);
+    if (allFinished && Object.keys(results).length >= 2) {
+      // Determine winner
+      let winner = "Nobody";
+      let maxPoints = 0;
+      for (const [name, data] of Object.entries(results)) {
+        if (data.points > maxPoints) {
+          maxPoints = data.points;
+          winner = name;
+        }
       }
-    }
 
-    // Save global summary
-    await db.ref("gameSummary").set({ winner, maxPoints });
-  }
+      // Save global summary only once
+      await db.ref("gameSummary").set({ winner, maxPoints });
 
-  // Listen for game summary and redirect everyone when ready
-  db.ref("gameSummary").on("value", snapshot => {
-    const summary = snapshot.val();
-    if (summary) {
-      // Stop listener
-      summaryRef.off();
-      // Show alert
+      // Redirect everyone
       alert("Both players are done! Calculating results...");
-      // Save data
       localStorage.setItem("playerName", username);
       localStorage.setItem("userPoints", points);
-      // Redirect to result page
       window.location.href = "../result/result.html";
+
+    } else {
+      // Retry after a short delay
+      setTimeout(checkSummary, 1000);
     }
-  });
+  };
+
+  checkSummary();
 }
+
 
 document.getElementById("endBtn").addEventListener("click", endGame);
 
