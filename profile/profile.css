@@ -1,81 +1,85 @@
 body {
-  font-family: 'Poppins', sans-serif;
-  background-color: #151259;
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(180deg, #3a1c71, #d76d77, #ffaf7b);
   color: white;
-  margin: 0;
-  padding: 0;
-  text-align: center;
   display: flex;
   justify-content: center;
   align-items: flex-start;
   min-height: 100vh;
+  margin: 0;
+  padding: 40px 20px;
 }
 
 .profile-container {
-  max-width: 600px;
-  padding: 2rem 1rem;
+  text-align: center;
   width: 100%;
+  max-width: 500px;
 }
 
 #profileImage {
-  width: 180px;
+  width: 150px;
   height: auto;
   border-radius: 0; /* no circle */
-  margin-bottom: 1.5rem;
+  margin-bottom: 20px;
 }
 
-#profileName {
-  font-size: 2rem;
-  font-weight: 600;
-  margin-bottom: 0.8rem;
+.total-points {
+  font-weight: 500; /* semibold */
+  margin-bottom: 30px;
 }
 
-#totalPoints {
-  font-size: 1.1rem;
-  font-weight: 500; /* medium/semibold look */
-  margin-bottom: 2rem;
-}
-
-.history-section {
+.section-title {
+  font-weight: bold;
+  font-size: 1.2rem;
+  margin-bottom: 15px;
   text-align: left;
-  margin-top: 1rem;
 }
 
-.history-section h2 {
-  font-size: 1.3rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
+.prize-history {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-/* Prize history tiles */
 .prize-tile {
-  background-color: rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  color: white;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 15px 20px;
+  border-radius: 16px;
+  transition: opacity 0.5s ease, transform 0.3s ease;
 }
 
 .prize-tile.expired {
-  border: 2px solid #d6496a;
+  opacity: 0.4;
+}
+
+.prize-info {
+  text-align: left;
 }
 
 .prize-title {
-  font-weight: 600;
-  font-size: 1rem;
+  font-weight: 500;
 }
 
-.prize-meta {
-  font-size: 0.9rem;
-  opacity: 0.9;
+.claim-btn {
+  background: transparent;
+  border: 1px solid white;
+  color: white;
+  border-radius: 10px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-.expired-label {
-  color: #d6496a;
-  font-weight: 600;
-  font-size: 0.9rem;
+.claim-btn.claimed {
+  border: 2px solid white;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.status-text {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-left: 10px;
 }
