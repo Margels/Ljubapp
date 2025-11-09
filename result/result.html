@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Game Results</title>
+  <link rel="stylesheet" href="style.css" />
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "YOUR-API-KEY",
+      authDomain: "YOUR-DOMAIN",
+      databaseURL: "https://YOUR-APP.firebaseio.com",
+      projectId: "YOUR-PROJECT-ID",
+      storageBucket: "YOUR-BUCKET",
+      messagingSenderId: "YOUR-ID",
+      appId: "YOUR-APP-ID"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    async function loadResults() {
+      const userName = localStorage.getItem("username");
+      const snapshot = await get(ref(db, "currentGame"));
+      const gameData = snapshot.val();
+      const winner = gameData?.winner;
+      const userPoints = gameData?.[userName] || 0;
+
+      // Update player’s total points
+      const playerRef = ref(db, `players/${userName}/points`);
+      const totalSnap = await get(playerRef);
+      const oldTotal = totalSnap.exists() ? totalSnap.val() : 0;
+      const newTotal = oldTotal + userPoints;
+      await set(playerRef, newTotal);
+
+      // Display results
+      const title = document.getElementById("resultTitle");
+      const details = document.getElementById("resultDetails");
+      const total = document.getElementById("totalPoints");
+
+      if (winner === userName) {
+        title.textContent = "🎉 Congratulations, you won!";
+      } else {
+        title.textContent = "🥀 Better luck next time!";
+      }
+
+      details.textContent = `${winner} won with ${gameData[winner]} points!`;
+      total.textContent = `Your total points: ${newTotal}`;
+    }
+
+    loadResults();
+  </script>
+
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      text-align: center;
+      background: #f7f5ff;
+      color: #151259;
+      padding: 40px;
+    }
+    h1 {
+      font-size: 2em;
+      margin-bottom: 20px;
+    }
+    p {
+      font-size: 1.2em;
+      margin-bottom: 15px;
+    }
+  </style>
+</head>
+<body>
+  <h1 id="resultTitle"></h1>
+  <p id="resultDetails"></p>
+  <p id="totalPoints"></p>
+</body>
+</html>
