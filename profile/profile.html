@@ -1,21 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Your Profile</title>
-  <link rel="stylesheet" href="profile.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile</title>
+  <link rel="stylesheet" href="profile.css" />
 </head>
 <body>
   <div class="profile-container">
-    <img id="profileImage" src="" alt="Profile Image" />
-    <h1 id="profileName"></h1>
-    <p id="totalPoints"></p>
+    <img id="profileImage" src="../assets/martina.png" alt="Profile Photo" />
+    <h1 id="profileName">Martina</h1>
+    <p class="total-points">🎯 Total points: <span id="totalPoints">0</span></p>
 
-    <div class="history-section">
-      <h2>Prize collection history:</h2>
-      <div id="prizeHistory"></div>
-    </div>
+    <h2 class="section-title">Prize collection history:</h2>
+    <div id="prizeHistory" class="prize-history"></div>
   </div>
 
   <script src="profile.js"></script>
