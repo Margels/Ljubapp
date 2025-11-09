@@ -4,77 +4,77 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Game Results</title>
-  <link rel="stylesheet" href="style.css" />
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "YOUR-API-KEY",
-      authDomain: "YOUR-DOMAIN",
-      databaseURL: "https://YOUR-APP.firebaseio.com",
-      projectId: "YOUR-PROJECT-ID",
-      storageBucket: "YOUR-BUCKET",
-      messagingSenderId: "YOUR-ID",
-      appId: "YOUR-APP-ID"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    async function loadResults() {
-      const userName = localStorage.getItem("username");
-      const snapshot = await get(ref(db, "currentGame"));
-      const gameData = snapshot.val();
-      const winner = gameData?.winner;
-      const userPoints = gameData?.[userName] || 0;
-
-      // Update player’s total points
-      const playerRef = ref(db, `players/${userName}/points`);
-      const totalSnap = await get(playerRef);
-      const oldTotal = totalSnap.exists() ? totalSnap.val() : 0;
-      const newTotal = oldTotal + userPoints;
-      await set(playerRef, newTotal);
-
-      // Display results
-      const title = document.getElementById("resultTitle");
-      const details = document.getElementById("resultDetails");
-      const total = document.getElementById("totalPoints");
-
-      if (winner === userName) {
-        title.textContent = "🎉 Congratulations, you won!";
-      } else {
-        title.textContent = "🥀 Better luck next time!";
-      }
-
-      details.textContent = `${winner} won with ${gameData[winner]} points!`;
-      total.textContent = `Your total points: ${newTotal}`;
-    }
-
-    loadResults();
-  </script>
+  <link rel="stylesheet" href="../grocery/grocery.css" />
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
   <style>
     body {
-      font-family: 'Poppins', sans-serif;
+      background-color: #151259;
+      color: white;
       text-align: center;
-      background: #f7f5ff;
-      color: #151259;
-      padding: 40px;
+      font-family: 'Poppins', sans-serif;
+      padding: 30px;
     }
     h1 {
-      font-size: 2em;
-      margin-bottom: 20px;
+      font-size: 2rem;
+      margin-bottom: 10px;
     }
-    p {
-      font-size: 1.2em;
-      margin-bottom: 15px;
+    .points {
+      margin-top: 30px;
+      font-size: 1.4rem;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
   <h1 id="resultTitle"></h1>
   <p id="resultDetails"></p>
-  <p id="totalPoints"></p>
+  <p class="points" id="totalPoints"></p>
+
+  <script>
+    // --- CONFIGURE FIREBASE ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyAhNkyI7aG6snk2hPergYyGdftBBN9M1h0",
+      authDomain: "ljubapp.firebaseapp.com",
+      databaseURL: "https://ljubapp-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "ljubapp",
+      storageBucket: "ljubapp.firebasestorage.app",
+      messagingSenderId: "922849938749",
+      appId: "1:922849938749:web:59c06714af609e478d0954"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    async function loadResults() {
+      const userName = localStorage.getItem("playerName");
+      const winnerName = localStorage.getItem("winnerName");
+      const winnerPoints = parseInt(localStorage.getItem("winnerPoints")) || 0;
+      const userPoints = parseInt(localStorage.getItem("userPoints")) || 0;
+
+      // Fetch user’s total previous score
+      const totalRef = db.ref(`players/${userName}/totalPoints`);
+      const snapshot = await totalRef.once("value");
+      const oldTotal = snapshot.exists() ? snapshot.val() : 0;
+      const newTotal = oldTotal + userPoints;
+      await totalRef.set(newTotal);
+
+      const titleEl = document.getElementById("resultTitle");
+      const detailsEl = document.getElementById("resultDetails");
+      const totalEl = document.getElementById("totalPoints");
+
+      if (userName === winnerName) {
+        titleEl.textContent = "🎉 Congratulations, you won!";
+      } else {
+        titleEl.textContent = "🥀 Better luck next time!";
+      }
+
+      detailsEl.textContent = `${winnerName} won with ${winnerPoints} points!`;
+      totalEl.textContent = `Your total points: ${newTotal}`;
+    }
+
+    loadResults();
+  </script>
 </body>
 </html>
