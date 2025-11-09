@@ -1,20 +1,44 @@
-document.addEventListener("DOMContentLoaded", async () => {
-  const totalPoints = localStorage.getItem("totalPoints") || 0;
-  document.getElementById("totalPoints").textContent = totalPoints;
+// --- CONFIGURE FIREBASE ---
+const firebaseConfig = {
+  apiKey: "AIzaSyAhNkyI7aG6snk2hPergYyGdftBBN9M1h0",
+  authDomain: "ljubapp.firebaseapp.com",
+  databaseURL: "https://ljubapp-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "ljubapp",
+  storageBucket: "ljubapp.firebasestorage.app",
+  messagingSenderId: "922849938749",
+  appId: "1:922849938749:web:59c06714af609e478d0954"
+};
 
-  const profileName = localStorage.getItem("userName") || "Martina";
-  document.getElementById("profileName").textContent = profileName;
-  document.getElementById("profileImage").src = `../assets/${profileName.toLowerCase()}.png`;
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-  const prizes = await fetch("../data/prizes.json").then(res => res.json());
-  renderPrizeHistory(prizes);
+// --- DOM ELEMENTS ---
+const profileImage = document.getElementById("profileImage");
+const profileName = document.getElementById("profileName");
+const totalPointsEl = document.getElementById("totalPoints");
+const prizeHistory = document.getElementById("prizeHistory");
+const emptyMessage = document.getElementById("emptyMessage");
+
+// --- LOAD USER INFO ---
+const username = localStorage.getItem("playerName") || "Player";
+profileName.textContent = username;
+profileImage.src = `../assets/${username.toLowerCase()}.png`;
+
+// --- LOAD TOTAL POINTS FROM FIREBASE ---
+db.ref(`results/${username}/points`).once("value").then(snapshot => {
+  const points = snapshot.val() || 0;
+  totalPointsEl.textContent = points;
 });
 
-function renderPrizeHistory(prizes) {
-  const container = document.getElementById("prizeHistory");
-  container.innerHTML = "";
+// --- LOAD PRIZES HISTORY FROM FIREBASE ---
+db.ref(`claimedPrizes/${username}`).once("value").then(snapshot => {
+  const claimed = snapshot.val();
+  if (!claimed) {
+    emptyMessage.classList.remove("hidden");
+    return;
+  }
 
-  prizes.forEach(prize => {
+  Object.values(claimed).reverse().forEach(prize => {
     const tile = document.createElement("div");
     tile.className = "prize-tile";
 
@@ -29,72 +53,17 @@ function renderPrizeHistory(prizes) {
     const btn = document.createElement("button");
     btn.className = "claim-btn";
     btn.textContent = "Claim";
+    btn.disabled = true; // non-selectable history tiles
 
     const status = document.createElement("span");
     status.className = "status-text";
-
-    btn.addEventListener("click", () => handleClaim(prize, btn, status, tile));
+    status.textContent = prize.status || "";
 
     rightSide.appendChild(btn);
     rightSide.appendChild(status);
 
     tile.appendChild(info);
     tile.appendChild(rightSide);
-    container.appendChild(tile);
+    prizeHistory.appendChild(tile);
   });
-}
-
-function handleClaim(prize, btn, status, tile) {
-  btn.classList.add("claimed");
-
-  const duration = prize.duration;
-  const now = new Date();
-
-  if (duration.minutes || duration.hours) {
-    const expiry = new Date(now.getTime() +
-      (duration.minutes || 0) * 60000 +
-      (duration.hours || 0) * 3600000
-    );
-
-    updateCountdown(status, expiry, tile);
-    const interval = setInterval(() => {
-      const timeLeft = expiry - new Date();
-      if (timeLeft <= 0) {
-        clearInterval(interval);
-        tile.classList.add("expired");
-        status.textContent = "Expired";
-      } else {
-        updateCountdown(status, expiry, tile);
-      }
-    }, 1000);
-
-  } else if (duration.days) {
-    status.textContent = "Ongoing";
-  } else if (duration.uses) {
-    let remaining = duration.uses;
-    remaining -= 1;
-
-    if (remaining > 0) {
-      alert(`${remaining} uses left after this!`);
-      status.textContent = `${remaining} uses left`;
-      prize.duration.uses = remaining;
-    } else {
-      tile.classList.add("expired");
-      status.textContent = "Expired";
-    }
-  }
-}
-
-function updateCountdown(status, expiry) {
-  const diff = expiry - new Date();
-  const mins = Math.floor(diff / 60000);
-  const hours = Math.floor(mins / 60);
-
-  if (hours > 0) {
-    status.textContent = `${hours}h left`;
-  } else if (mins > 0) {
-    status.textContent = `${mins}m left`;
-  } else {
-    status.textContent = "Expired";
-  }
-}
+});
