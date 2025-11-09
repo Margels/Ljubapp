@@ -52,7 +52,12 @@ body {
 }
 
 .prize-tile.expired {
-  opacity: 0.4;
+  animation: fadeExpired 1s ease forwards;
+}
+
+@keyframes fadeExpired {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0.4; transform: scale(0.98); }
 }
 
 .prize-info {
