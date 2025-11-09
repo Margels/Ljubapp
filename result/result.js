@@ -14,7 +14,7 @@ const db = firebase.database();
 
 // --- LOAD LOCAL DATA ---
 const username = localStorage.getItem("playerName") || "Player";
-const userPoints = parseInt(localStorage.getItem("userPoints") || "0");
+let userPoints = parseInt(localStorage.getItem("userPoints") || "0");
 
 // --- DOM ELEMENTS ---
 const resultTitle = document.getElementById("resultTitle");
@@ -23,6 +23,9 @@ const pointsDisplay = document.getElementById("pointsDisplay");
 const claimSection = document.getElementById("claimSection");
 const prizeGrid = document.getElementById("prizeGrid");
 const profileBtn = document.getElementById("profileBtn");
+const confirmPrizeBtn = document.getElementById("confirmPrizeBtn");
+
+let selectedPrize = null;
 
 // --- LOAD WINNER INFO ---
 db.ref("gameSummary").once("value").then(snapshot => {
@@ -32,19 +35,15 @@ db.ref("gameSummary").once("value").then(snapshot => {
 
   if (winner === username) {
     resultTitle.textContent = "Congratulations, you won 🎉";
+    claimSection.classList.remove("hidden");
+    loadPrizes();
   } else {
     resultTitle.textContent = "Better luck next time 🥀";
+    profileBtn.classList.remove("hidden");
   }
 
   resultText.textContent = `${winner} won with ${maxPoints} points!`;
   pointsDisplay.textContent = `🎯 Total: ${userPoints}`;
-
-  if (winner === username) {
-    claimSection.classList.remove("hidden");
-    loadPrizes();
-  } else {
-    profileBtn.classList.remove("hidden");
-  }
 });
 
 // --- LOAD PRIZES ---
@@ -55,6 +54,10 @@ function loadPrizes() {
       prizes.forEach(prize => {
         const card = document.createElement("div");
         card.className = "prize-card";
+        card.dataset.emoji = prize.emoji;
+        card.dataset.title = prize.title;
+        card.dataset.points = prize.points;
+
         card.innerHTML = `
           <div class="prize-emoji">${prize.emoji}</div>
           <div class="prize-title">${prize.title}</div>
@@ -64,7 +67,8 @@ function loadPrizes() {
         card.addEventListener("click", () => {
           document.querySelectorAll(".prize-card").forEach(c => c.classList.remove("selected"));
           card.classList.add("selected");
-          // TODO: handle claiming logic later (save to DB or localStorage)
+          selectedPrize = prize;
+          confirmPrizeBtn.classList.remove("hidden");
         });
 
         prizeGrid.appendChild(card);
@@ -72,6 +76,22 @@ function loadPrizes() {
     });
 }
 
+// --- CONFIRM PRIZE SELECTION ---
+confirmPrizeBtn.addEventListener("click", () => {
+  if (!selectedPrize) return;
+
+  // Deduct points
+  userPoints -= selectedPrize.points;
+  localStorage.setItem("userPoints", userPoints);
+
+  // Save claimed prize info for profile summary
+  localStorage.setItem("claimedPrize", JSON.stringify(selectedPrize));
+
+  // Redirect to profile page
+  window.location.href = "../profile/profile.html"; // placeholder
+});
+
+// --- PROFILE BUTTON ---
 profileBtn.addEventListener("click", () => {
-  window.location.href = "../profile/profile.html"; // or wherever your profile page will be
+  window.location.href = "../profile/profile.html"; // placeholder
 });
