@@ -1,0 +1,35 @@
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: #151259;
+  color: white;
+  text-align: center;
+  margin: 0;
+  padding: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.profile-container {
+  max-width: 400px;
+}
+
+#profileImage {
+  width: 200px;
+  height: 200px;
+  border-radius: 100px;
+  object-fit: cover;
+  margin-bottom: 1.5rem;
+  border: 3px solid white;
+}
+
+#profileName {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+#profilePoints {
+  font-size: 1.2rem;
+  opacity: 0.9;
+}
