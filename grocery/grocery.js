@@ -13,6 +13,9 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+// ✅ NEW: Set current game name for later use (e.g. in result.js)
+localStorage.setItem("currentGame", "grocery-game");
+
 // --- VARIABLES ---
 const username = localStorage.getItem("playerName") || prompt("Enter your name 👋");
 const ingredientsContainer = document.getElementById("ingredients");
@@ -61,7 +64,7 @@ fetch("../files/ingredients.json")
   });
 
 
-// --- GAVE OVER LOGIC ---
+// --- GAME OVER LOGIC ---
 async function endGame() {
   const endBtn = document.getElementById("endBtn");
   endBtn.disabled = true;
@@ -97,9 +100,11 @@ async function endGame() {
       // Save global summary only once
       await db.ref("grocery-game/gameSummary").set({ winner, maxPoints });
 
-      // Redirect everyone
+      // Save player info for result page
       localStorage.setItem("playerName", username);
       localStorage.setItem("userPoints", points);
+
+      // Redirect
       window.location.href = "../result/result.html";
 
     } else {
@@ -111,6 +116,4 @@ async function endGame() {
   checkSummary();
 }
 
-
 document.getElementById("endBtn").addEventListener("click", endGame);
-

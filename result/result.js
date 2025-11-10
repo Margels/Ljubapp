@@ -16,6 +16,9 @@ const db = firebase.database();
 const username = localStorage.getItem("playerName") || "Player";
 let userPoints = parseInt(localStorage.getItem("userPoints") || "0");
 
+// ✅ NEW: dynamic game name
+const gameName = localStorage.getItem("currentGame") || "default-game";
+
 // --- DOM ELEMENTS ---
 const resultTitle = document.getElementById("resultTitle");
 const resultText = document.getElementById("resultText");
@@ -28,31 +31,37 @@ const confirmPrizeBtn = document.getElementById("confirmPrizeBtn");
 let selectedPrize = null;
 
 // --- LOAD WINNER INFO ---
-db.ref("gameSummary").once("value").then(async snapshot => {
+db.ref(`${gameName}/gameSummary`).once("value").then(async snapshot => {
   const summary = snapshot.val();
   const winner = summary?.winner || "Nobody";
   const maxPoints = summary?.maxPoints || 0;
 
+  // --- Get previous points if exist ---
+  const userRef = db.ref(`users/${username}`);
+  const userSnapshot = await userRef.once("value");
+  const prevPoints = userSnapshot.exists() ? parseInt(userSnapshot.val().points || 0) : 0;
+
+  // --- Calculate total ---
+  const totalPoints = prevPoints + userPoints;
+
+  // --- Update Firebase points ---
+  await userRef.update({ points: totalPoints });
+
+  // --- Update localStorage too ---
+  localStorage.setItem("userPoints", totalPoints);
+
+  // --- Update UI based on winner ---
   if (winner === username) {
-    // --- WINNER ---
     resultTitle.textContent = "Congratulations, you won 🎉";
     claimSection.classList.remove("hidden");
     loadPrizes();
-
-    // Save latest points to Firebase (ensure user exists)
-    await db.ref(`users/${username}`).update({ points: userPoints });
-
   } else {
-    // --- LOSER ---
     resultTitle.textContent = "Better luck next time 🥀";
     profileBtn.classList.remove("hidden");
-
-    // Ensure loser also has points stored in Firebase
-    await db.ref(`users/${username}`).update({ points: userPoints });
   }
 
   resultText.textContent = `${winner} won with ${maxPoints} points!`;
-  pointsDisplay.textContent = `🎯 Total: ${userPoints}`;
+  pointsDisplay.textContent = `🎯 Total: ${totalPoints}`;
 });
 
 // --- LOAD PRIZES ---
