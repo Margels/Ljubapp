@@ -48,19 +48,19 @@ body {
 }
 
 .claim-btn {
-  background-color: transparent;
-  border: 2px solid white;
-  color: white;
-  border-radius: 12px;
-  padding: 0.4rem 1rem;
-  font-size: 0.9rem;
-  font-weight: 500;
+  background-color: white;
+  color: #151259;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  padding: 0.4rem 0.8rem;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
-.claim-btn:hover:not(:disabled) {
-  background-color: rgba(255, 255, 255, 0.15);
+.claim-btn:hover {
+  opacity: 0.9;
+  transform: scale(1.03);
 }
 
 .claim-btn:disabled {
