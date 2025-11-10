@@ -28,18 +28,27 @@ const confirmPrizeBtn = document.getElementById("confirmPrizeBtn");
 let selectedPrize = null;
 
 // --- LOAD WINNER INFO ---
-db.ref("gameSummary").once("value").then(snapshot => {
+db.ref("gameSummary").once("value").then(async snapshot => {
   const summary = snapshot.val();
   const winner = summary?.winner || "Nobody";
   const maxPoints = summary?.maxPoints || 0;
 
   if (winner === username) {
+    // --- WINNER ---
     resultTitle.textContent = "Congratulations, you won 🎉";
     claimSection.classList.remove("hidden");
     loadPrizes();
+
+    // Save latest points to Firebase (ensure user exists)
+    await db.ref(`users/${username}`).update({ points: userPoints });
+
   } else {
+    // --- LOSER ---
     resultTitle.textContent = "Better luck next time 🥀";
     profileBtn.classList.remove("hidden");
+
+    // Ensure loser also has points stored in Firebase
+    await db.ref(`users/${username}`).update({ points: userPoints });
   }
 
   resultText.textContent = `${winner} won with ${maxPoints} points!`;
@@ -92,20 +101,19 @@ confirmPrizeBtn.addEventListener("click", async () => {
   userPoints -= selectedPrize.points;
   localStorage.setItem("userPoints", userPoints);
 
-  // Prepare prize data
+  // Prepare prize data (⚠️ unclaimed — no claimedAt yet)
   const prizeData = {
     title: selectedPrize.title,
     emoji: selectedPrize.emoji,
     points: selectedPrize.points,
-    claimedAt: new Date().toISOString(),
     duration: selectedPrize.duration || {},
-    status: "ongoing"
+    status: "unclaimed"
   };
 
-  // Save to Firebase
   const userRef = db.ref(`users/${username}`);
-  await userRef.child("points").set(userPoints);
 
+  // Save updated points and add prize to user history
+  await userRef.update({ points: userPoints });
   await userRef.child("prizesCollected").push(prizeData);
 
   // Redirect to profile
@@ -113,6 +121,8 @@ confirmPrizeBtn.addEventListener("click", async () => {
 });
 
 // --- PROFILE BUTTON ---
-profileBtn.addEventListener("click", () => {
+profileBtn.addEventListener("click", async () => {
+  // Make sure even losers get their current points saved
+  await db.ref(`users/${username}`).update({ points: userPoints });
   window.location.href = "../profile/profile.html";
 });
