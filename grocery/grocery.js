@@ -33,7 +33,7 @@ fetch("../files/ingredients.json")
       const ingredientKey = name.replace(/\s+/g, "_");
 
       // Listen for live updates
-      db.ref(`ingredients/${ingredientKey}`).on("value", snapshot => {
+      db.ref(`grocery-game/ingredients/${ingredientKey}`).on("value", snapshot => {
         const data = snapshot.val();
         if (data && data.selectedBy && data.selectedBy !== username) {
           div.classList.add("unavailable");
@@ -49,11 +49,11 @@ fetch("../files/ingredients.json")
         if (checkbox.checked) {
           div.classList.add("checked");
           points++;
-          db.ref(`ingredients/${ingredientKey}`).set({ selectedBy: username });
+          db.ref(`grocery-game/ingredients/${ingredientKey}`).set({ selectedBy: username });
         } else {
           div.classList.remove("checked");
           points--;
-          db.ref(`ingredients/${ingredientKey}`).remove();
+          db.ref(`grocery-game/ingredients/${ingredientKey}`).remove();
         }
         pointsDisplay.textContent = `Points: ${points}`;
       });
@@ -68,7 +68,7 @@ async function endGame() {
   endBtn.style.opacity = "0.5";
   endBtn.textContent = "Waiting for opponent...";
 
-  const playerRef = db.ref("results/" + username);
+  const playerRef = db.ref("grocery-game/results/" + username);
 
   // Save player's result
   await playerRef.set({
@@ -78,7 +78,7 @@ async function endGame() {
 
   // --- Polling for game summary ---
   const checkSummary = async () => {
-    const resultsSnap = await db.ref("results").once("value");
+    const resultsSnap = await db.ref("grocery-game/results").once("value");
     const results = resultsSnap.val() || {};
 
     // If both players finished
@@ -95,7 +95,7 @@ async function endGame() {
       }
 
       // Save global summary only once
-      await db.ref("gameSummary").set({ winner, maxPoints });
+      await db.ref("grocery-game/gameSummary").set({ winner, maxPoints });
 
       // Redirect everyone
       localStorage.setItem("playerName", username);
