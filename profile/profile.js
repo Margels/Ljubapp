@@ -1,8 +1,19 @@
-// --- LOAD USER DATA ---
-const username = localStorage.getItem("playerName") || "Player";
-const userPoints = parseInt(localStorage.getItem("userPoints") || "0");
+// --- CONFIGURE FIREBASE ---
+const firebaseConfig = {
+  apiKey: "AIzaSyAhNkyI7aG6snk2hPergYyGdftBBN9M1h0",
+  authDomain: "ljubapp.firebaseapp.com",
+  databaseURL: "https://ljubapp-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "ljubapp",
+  storageBucket: "ljubapp.firebasestorage.app",
+  messagingSenderId: "922849938749",
+  appId: "1:922849938749:web:59c06714af609e478d0954"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
 // --- DOM ELEMENTS ---
+const username = localStorage.getItem("playerName") || "Player";
 const profileImage = document.getElementById("profileImage");
 const profileName = document.getElementById("profileName");
 const totalPoints = document.getElementById("totalPoints");
@@ -11,82 +22,60 @@ const prizeHistory = document.getElementById("prizeHistory");
 // --- SET PROFILE INFO ---
 profileImage.src = `../assets/${username.toLowerCase()}.png`;
 profileName.textContent = username;
-totalPoints.textContent = `🎯 Total points: ${userPoints}`;
 
-// --- LOAD PRIZES ---
-fetch("../files/prizes.json")
-  .then(res => res.json())
-  .then(prizes => {
-    const claimedPrizes = JSON.parse(localStorage.getItem("claimedPrizes") || "[]");
+// --- LOAD USER DATA FROM FIREBASE ---
+db.ref(`users/${username}`).once("value").then(snapshot => {
+  const userData = snapshot.val();
+  const points = userData?.points || 0;
+  totalPoints.textContent = `🎯 Total points: ${points}`;
 
-    if (claimedPrizes.length === 0) {
-      prizeHistory.innerHTML = `<p style="opacity:0.7;">No prizes collected yet.</p>`;
-      return;
-    }
+  const prizes = userData?.prizesCollected || {};
+  const prizeArray = Object.values(prizes || {});
 
-    // Sort newest first
-    claimedPrizes.sort((a, b) => new Date(b.claimedAt || 0) - new Date(a.claimedAt || 0));
+  if (prizeArray.length === 0) {
+    prizeHistory.innerHTML = `<p style="opacity:0.7;">No prizes collected yet.</p>`;
+    return;
+  }
 
-    claimedPrizes.forEach(prize => renderPrizeTile(prize));
-  });
+  // Sort newest first
+  prizeArray.sort((a, b) => new Date(b.claimedAt) - new Date(a.claimedAt));
+  prizeArray.forEach(p => renderPrizeTile(p));
+});
 
-// --- RENDER TILE FUNCTION ---
+// --- RENDER PRIZE TILE ---
 function renderPrizeTile(prize) {
   const tile = document.createElement("div");
   tile.className = "prize-tile";
 
-  const duration = prize.duration || {};
-  const claimedAt = prize.claimedAt ? new Date(prize.claimedAt) : null;
-
   let rightContent = "";
   let isExpired = false;
+  const claimedAt = prize.claimedAt ? new Date(prize.claimedAt) : null;
 
-  // ----- EXPIRY CALCULATION -----
-  if (claimedAt && (duration.minutes || duration.hours || duration.days)) {
-    const now = new Date();
+  // Expiry check
+  if (prize.duration && claimedAt) {
+    const { minutes, hours, days } = prize.duration;
     let expiry;
 
-    if (duration.minutes) {
-      expiry = new Date(claimedAt.getTime() + duration.minutes * 60000);
-    } else if (duration.hours) {
-      expiry = new Date(claimedAt.getTime() + duration.hours * 3600000);
-    } else if (duration.days) {
-      if (duration.days === 1) {
-        expiry = new Date(claimedAt);
-        expiry.setHours(23, 59, 59, 999); // until midnight
-      } else {
-        expiry = new Date(claimedAt.getTime() + duration.days * 24 * 3600000);
-      }
-    }
+    if (minutes) expiry = new Date(claimedAt.getTime() + minutes * 60000);
+    else if (hours) expiry = new Date(claimedAt.getTime() + hours * 3600000);
+    else if (days) expiry = new Date(claimedAt.getTime() + days * 86400000);
 
-    if (now > expiry) {
+    if (expiry && new Date() > expiry) {
       isExpired = true;
-    } else {
-      const diffMs = expiry - now;
+    } else if (expiry) {
+      const diffMs = expiry - new Date();
       const diffH = Math.floor(diffMs / 3600000);
       const diffM = Math.floor((diffMs % 3600000) / 60000);
-
-      if (duration.days) rightContent = "Ongoing";
-      else if (diffH > 0) rightContent = `${diffH}h left`;
-      else rightContent = `${diffM}m left`;
-    }
-  }
-
-  if (duration.uses) {
-    const usesLeft = prize.usesLeft ?? duration.uses;
-    if (usesLeft <= 0) {
-      isExpired = true;
-    } else {
-      rightContent = `${usesLeft} use${usesLeft > 1 ? "s" : ""} left`;
+      rightContent = diffH > 0 ? `${diffH}h left` : `${diffM}m left`;
     }
   }
 
   if (isExpired) {
-    tile.style.opacity = "0.5";
     rightContent = "Expired";
+    tile.style.border = "2px solid #d6496a";
+    tile.querySelector = "expired-label";
   }
 
-  // ----- TILE STRUCTURE -----
   tile.innerHTML = `
     <div>
       <div class="prize-title">${prize.emoji} ${prize.title}</div>
@@ -95,53 +84,5 @@ function renderPrizeTile(prize) {
     <div class="tile-right">${rightContent}</div>
   `;
 
-  // ----- CLAIM BUTTON -----
-  if (!claimedAt && !isExpired) {
-    const claimBtn = document.createElement("button");
-    claimBtn.className = "claim-btn";
-    claimBtn.textContent = "Claim";
-    claimBtn.onclick = () => handleClaim(prize, tile, claimBtn);
-    tile.appendChild(claimBtn);
-  }
-
   prizeHistory.appendChild(tile);
-}
-
-// --- HANDLE CLAIM ---
-function handleClaim(prize, tile, claimBtn) {
-  claimBtn.disabled = true;
-  tile.classList.add("claimed");
-
-  const now = new Date();
-  prize.claimedAt = now.toISOString();
-
-  // For uses-based prizes
-  if (prize.duration?.uses) {
-    prize.usesLeft = prize.duration.uses - 1;
-
-    if (prize.usesLeft > 0) {
-      alert(`You now have ${prize.usesLeft} use${prize.usesLeft > 1 ? "s" : ""} left!`);
-    } else {
-      alert(`That was your last use of ${prize.title}.`);
-    }
-  }
-
-  // Save updated prize info
-  let claimedPrizes = JSON.parse(localStorage.getItem("claimedPrizes") || "[]");
-  const index = claimedPrizes.findIndex(p => p.title === prize.title);
-  if (index >= 0) claimedPrizes[index] = prize;
-  else claimedPrizes.push(prize);
-  localStorage.setItem("claimedPrizes", JSON.stringify(claimedPrizes));
-
-  // Update display
-  tile.querySelector(".tile-right").textContent =
-    prize.duration?.uses
-      ? `${prize.usesLeft ?? prize.duration.uses} use${
-          (prize.usesLeft ?? prize.duration.uses) > 1 ? "s" : ""
-        } left`
-      : prize.duration?.days
-      ? "Ongoing"
-      : "0m left";
-
-  claimBtn.remove();
 }
