@@ -122,7 +122,18 @@ confirmPrizeBtn.addEventListener("click", async () => {
 
 // --- PROFILE BUTTON ---
 profileBtn.addEventListener("click", async () => {
-  // Make sure even losers get their current points saved
-  await db.ref(`users/${username}`).update({ points: userPoints });
+  const userRef = db.ref(`users/${username}`);
+  const snapshot = await userRef.once("value");
+
+  if (!snapshot.exists()) {
+    await userRef.set({
+      points: userPoints,
+      prizesCollected: {}
+    });
+  } else {
+    // make sure points are synced anyway
+    await userRef.child("points").set(userPoints);
+  }
+
   window.location.href = "../profile/profile.html";
 });
