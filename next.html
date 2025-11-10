@@ -18,17 +18,31 @@
       justify-content: center;
       gap: 10px;
       margin-top: 40px;
+      padding: 0 10px;
+      flex-wrap: wrap; /* optional: wrap if too small */
     }
 
     .countdown-box {
       background-color: rgba(255, 255, 255, 0.5);
       border-radius: 12px;
-      padding: 15px 20px;
-      min-width: 60px;
-      font-size: 1.5em;
+      flex: 1 1 20%;       /* allows shrinking/growing */
+      max-width: 90px;      /* cap for large screens */
+      aspect-ratio: 1 / 1;  /* forces square */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-size: clamp(1em, 4vw, 1.5em); /* font scales with box */
       font-weight: bold;
       color: #151259;
+      padding: 10px; /* padding inside box */
     }
+
+    #countdown-container {
+      max-width: 95vw; /* container will never overflow screen */
+      margin: 0 auto;
+    }
+
 
     .countdown-label {
       display: block;
