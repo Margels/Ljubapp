@@ -1,6 +1,18 @@
+// --- CONFIGURE FIREBASE ---
+const firebaseConfig = {
+  apiKey: "AIzaSyAhNkyI7aG6snk2hPergYyGdftBBN9M1h0",
+  authDomain: "ljubapp.firebaseapp.com",
+  databaseURL: "https://ljubapp-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "ljubapp",
+  storageBucket: "ljubapp.firebasestorage.app",
+  messagingSenderId: "922849938749",
+  appId: "1:922849938749:web:59c06714af609e478d0954"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
 // --- LOAD USER DATA ---
 const username = localStorage.getItem("playerName") || "Player";
-const userPoints = parseInt(localStorage.getItem("userPoints") || "0");
 
 // --- DOM ELEMENTS ---
 const profileImage = document.getElementById("profileImage");
@@ -11,24 +23,28 @@ const prizeHistory = document.getElementById("prizeHistory");
 // --- SET PROFILE INFO ---
 profileImage.src = `../assets/${username.toLowerCase()}.png`;
 profileName.textContent = username;
-totalPoints.textContent = `🎯 Total points: ${userPoints}`;
 
-// --- LOAD PRIZES ---
-fetch("../files/prizes.json")
-  .then(res => res.json())
-  .then(prizes => {
-    const claimedPrizes = JSON.parse(localStorage.getItem("claimedPrizes") || "[]");
+// --- LOAD USER INFO FROM FIREBASE ---
+db.ref(`users/${username}`).once("value").then(snapshot => {
+  const userData = snapshot.val();
 
-    if (claimedPrizes.length === 0) {
-      prizeHistory.innerHTML = `<p style="opacity:0.7;">No prizes collected yet.</p>`;
-      return;
-    }
+  const userPoints = userData?.points || 0;
+  totalPoints.textContent = `🎯 Total points: ${userPoints}`;
 
-    // Sort newest first
-    claimedPrizes.sort((a, b) => new Date(b.claimedAt || 0) - new Date(a.claimedAt || 0));
+  const prizesCollected = userData?.prizesCollected
+    ? Object.values(userData.prizesCollected)
+    : [];
 
-    claimedPrizes.forEach(prize => renderPrizeTile(prize));
-  });
+  if (prizesCollected.length === 0) {
+    prizeHistory.innerHTML = `<p style="opacity:0.7;">No prizes collected yet.</p>`;
+    return;
+  }
+
+  // Sort newest first
+  prizesCollected.sort((a, b) => new Date(b.claimedAt || 0) - new Date(a.claimedAt || 0));
+
+  prizesCollected.forEach(prize => renderPrizeTile(prize));
+});
 
 // --- RENDER TILE FUNCTION ---
 function renderPrizeTile(prize) {
@@ -96,13 +112,15 @@ function renderPrizeTile(prize) {
   `;
 
   // ----- CLAIM BUTTON -----
-  if (!claimedAt && !isExpired) {
+  if (!prize.claimedAt && !isExpired && prize.status !== "claimed") {
     const claimBtn = document.createElement("button");
     claimBtn.className = "claim-btn";
     claimBtn.textContent = "Claim";
     claimBtn.onclick = () => handleClaim(prize, tile, claimBtn);
     tile.appendChild(claimBtn);
   }
+
+  if (isExpired) tile.classList.add("expired");
 
   prizeHistory.appendChild(tile);
 }
@@ -114,34 +132,22 @@ function handleClaim(prize, tile, claimBtn) {
 
   const now = new Date();
   prize.claimedAt = now.toISOString();
+  prize.status = "claimed";
 
-  // For uses-based prizes
-  if (prize.duration?.uses) {
-    prize.usesLeft = prize.duration.uses - 1;
+  // Update Firebase instead of localStorage
+  const userRef = db.ref(`users/${username}/prizesCollected`);
+  userRef
+    .orderByChild("title")
+    .equalTo(prize.title)
+    .once("value", snapshot => {
+      if (snapshot.exists()) {
+        const key = Object.keys(snapshot.val())[0];
+        userRef.child(key).update(prize);
+      } else {
+        userRef.push(prize);
+      }
+    });
 
-    if (prize.usesLeft > 0) {
-      alert(`You now have ${prize.usesLeft} use${prize.usesLeft > 1 ? "s" : ""} left!`);
-    } else {
-      alert(`That was your last use of ${prize.title}.`);
-    }
-  }
-
-  // Save updated prize info
-  let claimedPrizes = JSON.parse(localStorage.getItem("claimedPrizes") || "[]");
-  const index = claimedPrizes.findIndex(p => p.title === prize.title);
-  if (index >= 0) claimedPrizes[index] = prize;
-  else claimedPrizes.push(prize);
-  localStorage.setItem("claimedPrizes", JSON.stringify(claimedPrizes));
-
-  // Update display
-  tile.querySelector(".tile-right").textContent =
-    prize.duration?.uses
-      ? `${prize.usesLeft ?? prize.duration.uses} use${
-          (prize.usesLeft ?? prize.duration.uses) > 1 ? "s" : ""
-        } left`
-      : prize.duration?.days
-      ? "Ongoing"
-      : "0m left";
-
+  tile.querySelector(".tile-right").textContent = "Claimed!";
   claimBtn.remove();
 }
