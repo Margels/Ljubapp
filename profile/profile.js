@@ -1,18 +1,6 @@
-// --- CONFIGURE FIREBASE ---
-const firebaseConfig = {
-  apiKey: "AIzaSyAhNkyI7aG6snk2hPergYyGdftBBN9M1h0",
-  authDomain: "ljubapp.firebaseapp.com",
-  databaseURL: "https://ljubapp-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "ljubapp",
-  storageBucket: "ljubapp.firebasestorage.app",
-  messagingSenderId: "922849938749",
-  appId: "1:922849938749:web:59c06714af609e478d0954"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
 // --- LOAD USER DATA ---
 const username = localStorage.getItem("playerName") || "Player";
+const userPoints = parseInt(localStorage.getItem("userPoints") || "0");
 
 // --- DOM ELEMENTS ---
 const profileImage = document.getElementById("profileImage");
@@ -23,33 +11,24 @@ const prizeHistory = document.getElementById("prizeHistory");
 // --- SET PROFILE INFO ---
 profileImage.src = `../assets/${username.toLowerCase()}.png`;
 profileName.textContent = username;
-totalPoints.textContent = "🎯 Total points: ...";
+totalPoints.textContent = `🎯 Total points: ${userPoints}`;
 
-// --- LOAD DATA FROM FIREBASE ---
-const userRef = db.ref(`users/${username}`);
+// --- LOAD PRIZES ---
+fetch("../files/prizes.json")
+  .then(res => res.json())
+  .then(prizes => {
+    const claimedPrizes = JSON.parse(localStorage.getItem("claimedPrizes") || "[]");
 
-userRef.once("value").then(snapshot => {
-  const userData = snapshot.val();
+    if (claimedPrizes.length === 0) {
+      prizeHistory.innerHTML = `<p style="opacity:0.7;">No prizes collected yet.</p>`;
+      return;
+    }
 
-  // --- POINTS ---
-  const points = userData?.points ?? 0;
-  totalPoints.textContent = `🎯 Total points: ${points}`;
-  localStorage.setItem("userPoints", points); // keep in sync with localStorage just in case
+    // Sort newest first
+    claimedPrizes.sort((a, b) => new Date(b.claimedAt || 0) - new Date(a.claimedAt || 0));
 
-  // --- PRIZES ---
-  const prizes = userData?.prizesCollected || {};
-  const prizeArray = Object.keys(prizes).map(id => ({ id, ...prizes[id] }));
-
-  if (prizeArray.length === 0) {
-    prizeHistory.innerHTML = `<p style="opacity:0.7;">No prizes collected yet.</p>`;
-    return;
-  }
-
-  // Sort newest first
-  prizeArray.sort((a, b) => new Date(b.claimedAt || 0) - new Date(a.claimedAt || 0));
-
-  prizeArray.forEach(prize => renderPrizeTile(prize));
-});
+    claimedPrizes.forEach(prize => renderPrizeTile(prize));
+  });
 
 // --- RENDER TILE FUNCTION ---
 function renderPrizeTile(prize) {
@@ -117,7 +96,7 @@ function renderPrizeTile(prize) {
   `;
 
   // ----- CLAIM BUTTON -----
-  if (prize.status !== "claimed" && !isExpired) {
+  if (!claimedAt && !isExpired) {
     const claimBtn = document.createElement("button");
     claimBtn.className = "claim-btn";
     claimBtn.textContent = "Claim";
@@ -128,18 +107,17 @@ function renderPrizeTile(prize) {
   prizeHistory.appendChild(tile);
 }
 
-// --- HANDLE CLAIM (Firebase version) ---
+// --- HANDLE CLAIM ---
 function handleClaim(prize, tile, claimBtn) {
   claimBtn.disabled = true;
   tile.classList.add("claimed");
 
   const now = new Date();
   prize.claimedAt = now.toISOString();
-  prize.status = "claimed";
 
   // For uses-based prizes
   if (prize.duration?.uses) {
-    prize.usesLeft = (prize.usesLeft ?? prize.duration.uses) - 1;
+    prize.usesLeft = prize.duration.uses - 1;
 
     if (prize.usesLeft > 0) {
       alert(`You now have ${prize.usesLeft} use${prize.usesLeft > 1 ? "s" : ""} left!`);
@@ -148,15 +126,14 @@ function handleClaim(prize, tile, claimBtn) {
     }
   }
 
-  // Update in Firebase
-  const prizeRef = db.ref(`users/${username}/prizesCollected/${prize.id}`);
-  prizeRef.update({
-    claimedAt: prize.claimedAt,
-    status: prize.status,
-    usesLeft: prize.usesLeft ?? null
-  });
+  // Save updated prize info
+  let claimedPrizes = JSON.parse(localStorage.getItem("claimedPrizes") || "[]");
+  const index = claimedPrizes.findIndex(p => p.title === prize.title);
+  if (index >= 0) claimedPrizes[index] = prize;
+  else claimedPrizes.push(prize);
+  localStorage.setItem("claimedPrizes", JSON.stringify(claimedPrizes));
 
-  // Update UI
+  // Update display
   tile.querySelector(".tile-right").textContent =
     prize.duration?.uses
       ? `${prize.usesLeft ?? prize.duration.uses} use${
