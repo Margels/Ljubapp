@@ -47,19 +47,6 @@ body {
   margin-bottom: 1rem;
 }
 
-/* Prize history tiles */
-.prize-tile {
-  background-color: rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  color: white;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-sizing: border-box;
-}
-
 .claim-btn {
   background-color: transparent;
   border: 2px solid white;
@@ -81,28 +68,40 @@ body {
   cursor: not-allowed;
 }
 
-/* Expired animation */
-@keyframes fadeOut {
-  from { opacity: 1; transform: scale(1); }
-  to { opacity: 0.2; transform: scale(0.97); }
-}
-
-.prize-tile.expired {
-  animation: fadeOut 0.8s ease forwards;
-}
-
-.prize-title {
-  font-weight: 600;
-  font-size: 1rem;
-}
-
-.prize-meta {
-  font-size: 0.9rem;
-  opacity: 0.9;
-}
-
 .expired-label {
   color: #d6496a;
   font-weight: 600;
   font-size: 0.9rem;
+}
+
+.prize-tile {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+.prize-tile .tile-right {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.prize-tile.claimed {
+  animation: claimFlash 0.8s ease;
+  border: 2px solid white;
+}
+
+@keyframes claimFlash {
+  0% { border-color: white; opacity: 0.5; }
+  100% { border-color: rgba(255, 255, 255, 0.2); opacity: 1; }
+}
+
+.prize-tile.expired {
+  animation: fadeOut 0.8s ease forwards;
 }
