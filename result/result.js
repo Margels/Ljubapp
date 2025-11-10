@@ -54,12 +54,10 @@ function loadPrizes() {
       prizes.forEach(prize => {
         const card = document.createElement("div");
         card.className = "prize-card";
-        card.dataset.emoji = prize.emoji;
         card.dataset.title = prize.title;
         card.dataset.points = prize.points;
 
         const canAfford = userPoints >= prize.points;
-
         card.innerHTML = `
           <div class="prize-emoji">${prize.emoji}</div>
           <div class="prize-title">${prize.title}</div>
@@ -67,12 +65,10 @@ function loadPrizes() {
         `;
 
         if (!canAfford) {
-          // Greyed out and unselectable
           card.classList.add("disabled");
           card.style.opacity = "0.4";
           card.style.cursor = "not-allowed";
         } else {
-          // Only attach click handler if the player can afford it
           card.addEventListener("click", () => {
             document.querySelectorAll(".prize-card").forEach(c => c.classList.remove("selected"));
             card.classList.add("selected");
@@ -87,25 +83,31 @@ function loadPrizes() {
 }
 
 // --- CONFIRM PRIZE SELECTION ---
-confirmPrizeBtn.addEventListener("click", () => {
+confirmPrizeBtn.addEventListener("click", async () => {
   if (!selectedPrize) return;
 
-  // Deduct points
+  // Deduct points locally and remotely
   userPoints -= selectedPrize.points;
   localStorage.setItem("userPoints", userPoints);
+  await db.ref(`users/${username}/points`).set(userPoints);
 
-  // Save claimed prize info for profile summary
-  const previous = JSON.parse(localStorage.getItem("claimedPrizes") || "[]");
-  selectedPrize.claimedAt = new Date().toISOString(); // timestamp
-  previous.push(selectedPrize);
-  localStorage.setItem("claimedPrizes", JSON.stringify(previous));
+  // Save prize info to Firebase
+  const prizeData = {
+    title: selectedPrize.title,
+    emoji: selectedPrize.emoji,
+    points: selectedPrize.points,
+    duration: selectedPrize.duration || null,
+    claimedAt: new Date().toISOString(),
+    status: "ongoing"
+  };
 
+  await db.ref(`users/${username}/prizesCollected`).push(prizeData);
 
-  // Redirect to profile page
-  window.location.href = "../profile/profile.html"; // placeholder
+  // Redirect
+  window.location.href = "../profile/profile.html";
 });
 
 // --- PROFILE BUTTON ---
 profileBtn.addEventListener("click", () => {
-  window.location.href = "../profile/profile.html"; // placeholder
+  window.location.href = "../profile/profile.html";
 });
