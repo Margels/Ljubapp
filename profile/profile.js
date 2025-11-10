@@ -156,15 +156,45 @@ function handleClaim(prize, tile, claimBtn) {
     usesLeft: prize.usesLeft ?? null
   });
 
-  // Update UI
-  tile.querySelector(".tile-right").textContent =
-    prize.duration?.uses
-      ? `${prize.usesLeft ?? prize.duration.uses} use${
-          (prize.usesLeft ?? prize.duration.uses) > 1 ? "s" : ""
-        } left`
-      : prize.duration?.days
-      ? "Ongoing"
-      : "0m left";
-
+  // Update UI text properly
+  updateTileTimer(tile, prize);
   claimBtn.remove();
+}
+
+// --- Helper: updates countdown text ---
+function updateTileTimer(tile, prize) {
+  const rightElement = tile.querySelector(".tile-right");
+  if (!prize.claimedAt || !prize.duration) return;
+
+  const claimedAt = new Date(prize.claimedAt);
+  let expiry = null;
+
+  if (prize.duration.minutes) {
+    expiry = new Date(claimedAt.getTime() + prize.duration.minutes * 60000);
+  } else if (prize.duration.hours) {
+    expiry = new Date(claimedAt.getTime() + prize.duration.hours * 3600000);
+  } else if (prize.duration.days) {
+    expiry = new Date(claimedAt.getTime() + prize.duration.days * 24 * 3600000);
+  }
+
+  function refreshTimer() {
+    const now = new Date();
+    const diffMs = expiry - now;
+    if (diffMs <= 0) {
+      rightElement.textContent = "Expired";
+      tile.style.opacity = "0.5";
+      clearInterval(interval);
+      return;
+    }
+
+    const diffM = Math.floor(diffMs / 60000);
+    const diffH = Math.floor(diffM / 60);
+    const display =
+      diffH > 0 ? `${diffH}h ${diffM % 60}m left` : `${diffM}m left`;
+
+    rightElement.textContent = display;
+  }
+
+  refreshTimer();
+  const interval = setInterval(refreshTimer, 60000); // update every minute
 }
