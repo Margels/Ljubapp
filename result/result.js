@@ -67,12 +67,10 @@ function loadPrizes() {
         `;
 
         if (!canAfford) {
-          // Greyed out and unselectable
           card.classList.add("disabled");
           card.style.opacity = "0.4";
           card.style.cursor = "not-allowed";
         } else {
-          // Only attach click handler if the player can afford it
           card.addEventListener("click", () => {
             document.querySelectorAll(".prize-card").forEach(c => c.classList.remove("selected"));
             card.classList.add("selected");
@@ -87,25 +85,34 @@ function loadPrizes() {
 }
 
 // --- CONFIRM PRIZE SELECTION ---
-confirmPrizeBtn.addEventListener("click", () => {
+confirmPrizeBtn.addEventListener("click", async () => {
   if (!selectedPrize) return;
 
   // Deduct points
   userPoints -= selectedPrize.points;
   localStorage.setItem("userPoints", userPoints);
 
-  // Save claimed prize info for profile summary
-  const previous = JSON.parse(localStorage.getItem("claimedPrizes") || "[]");
-  selectedPrize.claimedAt = new Date().toISOString(); // timestamp
-  previous.push(selectedPrize);
-  localStorage.setItem("claimedPrizes", JSON.stringify(previous));
+  // Prepare prize data
+  const prizeData = {
+    title: selectedPrize.title,
+    emoji: selectedPrize.emoji,
+    points: selectedPrize.points,
+    claimedAt: new Date().toISOString(),
+    duration: selectedPrize.duration || {},
+    status: "ongoing"
+  };
 
+  // Save to Firebase
+  const userRef = db.ref(`users/${username}`);
+  await userRef.child("points").set(userPoints);
 
-  // Redirect to profile page
-  window.location.href = "../profile/profile.html"; // placeholder
+  await userRef.child("prizesCollected").push(prizeData);
+
+  // Redirect to profile
+  window.location.href = "../profile/profile.html";
 });
 
 // --- PROFILE BUTTON ---
 profileBtn.addEventListener("click", () => {
-  window.location.href = "../profile/profile.html"; // placeholder
+  window.location.href = "../profile/profile.html";
 });
