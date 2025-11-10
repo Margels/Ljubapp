@@ -16,6 +16,9 @@ const db = firebase.database();
 const username = localStorage.getItem("playerName") || "Player";
 let userPoints = parseInt(localStorage.getItem("userPoints") || "0");
 
+// ✅ NEW: dynamic game name
+const gameName = localStorage.getItem("currentGame") || "default-game";
+
 // --- DOM ELEMENTS ---
 const resultTitle = document.getElementById("resultTitle");
 const resultText = document.getElementById("resultText");
@@ -28,7 +31,7 @@ const confirmPrizeBtn = document.getElementById("confirmPrizeBtn");
 let selectedPrize = null;
 
 // --- LOAD WINNER INFO ---
-db.ref("gameSummary").once("value").then(async snapshot => {
+db.ref(`${gameName}/gameSummary`).once("value").then(async snapshot => {
   const summary = snapshot.val();
   const winner = summary?.winner || "Nobody";
   const maxPoints = summary?.maxPoints || 0;
