@@ -47,7 +47,33 @@ body {
   margin-bottom: 1rem;
 }
 
-/* Prize history tiles */
+.claim-btn {
+  background-color: white;
+  color: #151259;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.claim-btn:hover {
+  opacity: 0.9;
+  transform: scale(1.03);
+}
+
+.claim-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.expired-label {
+  color: #d6496a;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
 .prize-tile {
   background-color: rgba(255, 255, 255, 0.2);
   border-radius: 12px;
@@ -58,24 +84,24 @@ body {
   justify-content: space-between;
   align-items: center;
   box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+.prize-tile .tile-right {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.prize-tile.claimed {
+  animation: claimFlash 0.8s ease;
+  border: 2px solid white;
+}
+
+@keyframes claimFlash {
+  0% { border-color: white; opacity: 0.5; }
+  100% { border-color: rgba(255, 255, 255, 0.2); opacity: 1; }
 }
 
 .prize-tile.expired {
-  border: 2px solid #d6496a;
-}
-
-.prize-title {
-  font-weight: 600;
-  font-size: 1rem;
-}
-
-.prize-meta {
-  font-size: 0.9rem;
-  opacity: 0.9;
-}
-
-.expired-label {
-  color: #d6496a;
-  font-weight: 600;
-  font-size: 0.9rem;
+  animation: fadeOut 0.8s ease forwards;
 }
