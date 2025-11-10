@@ -48,7 +48,13 @@ userRef.once("value").then(snapshot => {
   // Sort newest first
   prizeArray.sort((a, b) => new Date(b.claimedAt || 0) - new Date(a.claimedAt || 0));
 
-  prizeArray.forEach(prize => renderPrizeTile(prize));
+  prizeArray.forEach(prize => {
+  const tile = renderPrizeTile(prize);
+  if (prize.status === "claimed" && prize.duration) {
+    updateTileTimer(tile, prize);
+    }  
+  });
+
 });
 
 // --- RENDER TILE FUNCTION ---
@@ -126,6 +132,7 @@ function renderPrizeTile(prize) {
   }
 
   prizeHistory.appendChild(tile);
+  return tile;
 }
 
 // --- HANDLE CLAIM (Firebase version) ---
