@@ -8,6 +8,7 @@ const firebaseConfig = {
   messagingSenderId: "922849938749",
   appId: "1:922849938749:web:59c06714af609e478d0954"
 };
+
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
@@ -24,26 +25,28 @@ const prizeHistory = document.getElementById("prizeHistory");
 profileImage.src = `../assets/${username.toLowerCase()}.png`;
 profileName.textContent = username;
 
-// --- LOAD USER INFO FROM FIREBASE ---
-db.ref(`users/${username}`).once("value").then(snapshot => {
+// --- LOAD DATA FROM FIREBASE ---
+const userRef = db.ref(`users/${username}`);
+
+userRef.once("value").then(snapshot => {
   const userData = snapshot.val();
 
-  const userPoints = userData?.points || 0;
-  totalPoints.textContent = `🎯 Total points: ${userPoints}`;
+  const points = userData?.points ?? 0;
+  totalPoints.textContent = `🎯 Total points: ${points}`;
 
-  const prizesCollected = userData?.prizesCollected
-    ? Object.values(userData.prizesCollected)
-    : [];
+  const prizes = userData?.prizesCollected || {};
 
-  if (prizesCollected.length === 0) {
+  const prizeArray = Object.keys(prizes).map(id => ({ id, ...prizes[id] }));
+
+  if (prizeArray.length === 0) {
     prizeHistory.innerHTML = `<p style="opacity:0.7;">No prizes collected yet.</p>`;
     return;
   }
 
   // Sort newest first
-  prizesCollected.sort((a, b) => new Date(b.claimedAt || 0) - new Date(a.claimedAt || 0));
+  prizeArray.sort((a, b) => new Date(b.claimedAt || 0) - new Date(a.claimedAt || 0));
 
-  prizesCollected.forEach(prize => renderPrizeTile(prize));
+  prizeArray.forEach(prize => renderPrizeTile(prize));
 });
 
 // --- RENDER TILE FUNCTION ---
@@ -69,7 +72,7 @@ function renderPrizeTile(prize) {
     } else if (duration.days) {
       if (duration.days === 1) {
         expiry = new Date(claimedAt);
-        expiry.setHours(23, 59, 59, 999); // until midnight
+        expiry.setHours(23, 59, 59, 999);
       } else {
         expiry = new Date(claimedAt.getTime() + duration.days * 24 * 3600000);
       }
@@ -99,7 +102,9 @@ function renderPrizeTile(prize) {
 
   if (isExpired) {
     tile.style.opacity = "0.5";
+    tile.style.border = "2px solid #d6496a";
     rightContent = "Expired";
+    tile.querySelector;
   }
 
   // ----- TILE STRUCTURE -----
@@ -111,43 +116,5 @@ function renderPrizeTile(prize) {
     <div class="tile-right">${rightContent}</div>
   `;
 
-  // ----- CLAIM BUTTON -----
-  if (!prize.claimedAt && !isExpired && prize.status !== "claimed") {
-    const claimBtn = document.createElement("button");
-    claimBtn.className = "claim-btn";
-    claimBtn.textContent = "Claim";
-    claimBtn.onclick = () => handleClaim(prize, tile, claimBtn);
-    tile.appendChild(claimBtn);
-  }
-
-  if (isExpired) tile.classList.add("expired");
-
   prizeHistory.appendChild(tile);
-}
-
-// --- HANDLE CLAIM ---
-function handleClaim(prize, tile, claimBtn) {
-  claimBtn.disabled = true;
-  tile.classList.add("claimed");
-
-  const now = new Date();
-  prize.claimedAt = now.toISOString();
-  prize.status = "claimed";
-
-  // Update Firebase instead of localStorage
-  const userRef = db.ref(`users/${username}/prizesCollected`);
-  userRef
-    .orderByChild("title")
-    .equalTo(prize.title)
-    .once("value", snapshot => {
-      if (snapshot.exists()) {
-        const key = Object.keys(snapshot.val())[0];
-        userRef.child(key).update(prize);
-      } else {
-        userRef.push(prize);
-      }
-    });
-
-  tile.querySelector(".tile-right").textContent = "Claimed!";
-  claimBtn.remove();
 }
