@@ -121,24 +121,29 @@ function loadPrizes() {
 confirmPrizeBtn.addEventListener("click", async () => {
   if (!selectedPrize) return;
 
-  // Deduct points
-  userPoints -= selectedPrize.points;
-  localStorage.setItem("userPoints", userPoints);
-
-  // Prepare prize data (⚠️ unclaimed — no claimedAt yet)
-  const prizeData = {
-    title: selectedPrize.title,
-    emoji: selectedPrize.emoji,
-    points: selectedPrize.points,
-    duration: selectedPrize.duration || {},
-    status: "unclaimed"
-  };
-
-  const userRef = db.ref(`users/${username}`);
-
-  // Save updated points and add prize to user history
-  await userRef.update({ points: userPoints });
-  await userRef.child("prizesCollected").push(prizeData);
+  // Proceed only if user has just played (prevent re enter page through back button)
+  const currentGame = localStorage.getItem("currentGame");
+  if (currentGame) {
+      
+    // Deduct points
+    userPoints -= selectedPrize.points;
+    localStorage.setItem("userPoints", userPoints);
+  
+    // Prepare prize data (⚠️ unclaimed — no claimedAt yet)
+    const prizeData = {
+      title: selectedPrize.title,
+      emoji: selectedPrize.emoji,
+      points: selectedPrize.points,
+      duration: selectedPrize.duration || {},
+      status: "unclaimed"
+    };
+  
+    const userRef = db.ref(`users/${username}`);
+  
+    // Save updated points and add prize to user history
+    await userRef.update({ points: userPoints });
+    await userRef.child("prizesCollected").push(prizeData);
+  }
 
   // Redirect to profile
   window.location.href = "../profile/profile.html";
