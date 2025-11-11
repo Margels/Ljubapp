@@ -11,6 +11,20 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+// Reload after 30 seconds of inactivity
+let idleTimer;
+function resetTimer() {
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(() => {
+    window.location.replace("../navigation.html");
+  }, 30000); // 30 seconds
+}
+
+window.onload = resetTimer;
+document.onmousemove = resetTimer;
+document.ontouchstart = resetTimer;
+document.onkeydown = resetTimer;
+
 // --- LOAD USER DATA ---
 const username = localStorage.getItem("playerName") || "Player";
 
