@@ -13,8 +13,18 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// ✅ NEW: Set current game name for later use (e.g. in result.js)
+// NEW: Set current game name for later use (e.g. in result.js)
 localStorage.setItem("currentGame", "grocery-game");
+
+// Disable back navigation
+history.pushState(null, null, location.href);
+window.onpopstate = () => history.go(1);
+
+// If user has already played grocery game, redirect
+const userPoints = parseInt(localStorage.getItem("userPoints") || "0");
+if (userPoints > 0) {
+  window.location.replace("../profile/profile.html");
+}
 
 // --- VARIABLES ---
 const username = localStorage.getItem("playerName") || prompt("Enter your name 👋");
