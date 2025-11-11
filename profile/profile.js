@@ -26,11 +26,11 @@ profileName.textContent = username;
 totalPoints.textContent = "🎯 Total points: ...";
 localStorage.removeItem("currentGame")
 
-// Disable back navigation if coming from result page
-if (document.referrer.includes("result.html")) {
-  history.pushState(null, null, location.href);
-  window.onpopstate = () => history.go(1);
-}
+// --- DISABLE BACK NAVIGATION UNIVERSALLY ---
+window.history.pushState(null, null, window.location.href);
+window.addEventListener("popstate", function () {
+  window.history.pushState(null, null, window.location.href);
+});
 
 // Redirect to navigation if reloaded
 window.addEventListener("beforeunload", () => {
