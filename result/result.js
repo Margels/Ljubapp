@@ -12,11 +12,20 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+// Disable back navigation
+history.pushState(null, null, location.href);
+window.onpopstate = () => history.go(1);
+
+// If no currentGame, user already claimed a prize → redirect to profile
+if (!localStorage.getItem("currentGame")) {
+  window.location.replace("../profile/profile.html");
+}
+
 // --- LOAD LOCAL DATA ---
 const username = localStorage.getItem("playerName") || "Player";
 let userPoints = parseInt(localStorage.getItem("userPoints") || "0");
 
-// ✅ NEW: dynamic game name
+// NEW: dynamic game name
 const gameName = localStorage.getItem("currentGame") || "default-game";
 
 // --- DOM ELEMENTS ---
