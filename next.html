@@ -123,6 +123,8 @@
   const travelStartHour = 6; // 6am
   const travelEndHour = 15; // 3pm
   const targetDate = new Date("2025-11-26T14:00:00+02:00"); // Nov 26 GMT+2
+  // Other
+  const userPoints = parseInt(localStorage.getItem("userPoints") || "0");
 
   // ---------- HELPER FUNCTIONS ----------
   function formatNumber(n) {
@@ -267,7 +269,16 @@ function showTraveling() {
     }
   }
 
-  init();
+  // Prevent back navigation
+  history.pushState(null, null, location.href);
+  window.onpopstate = () => history.go(1);
+  
+  // Check if user already played grocery game
+  if (userPoints > 0) {
+    window.location.replace("profile/profile.html");
+  } else {
+    init();
+  }
 </script>
 
 </body>
