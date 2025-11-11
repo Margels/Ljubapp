@@ -16,27 +16,31 @@
     #countdown-container {
       display: flex;
       justify-content: center;
-      gap: 10px;
+      gap: 5px; /* smaller gap to fit boxes on narrow screens */
       margin-top: 40px;
-      padding: 0 10px;
-      flex-wrap: wrap; /* optional: wrap if too small */
-    }
+      padding: 0 5px;
+      flex-wrap: nowrap; /* try to keep in one row */
+      max-width: 95vw;
+      margin-left: auto;
+      margin-right: auto;
+}
 
     .countdown-box {
       background-color: rgba(255, 255, 255, 0.5);
       border-radius: 12px;
-      flex: 1 1 20%;       /* allows shrinking/growing */
-      max-width: 90px;      /* cap for large screens */
-      aspect-ratio: 1 / 1;  /* forces square */
+      flex: 1 1 18%; /* smaller basis allows shrinking */
+      min-width: 40px; /* ensure it doesn't get too tiny */
+      aspect-ratio: 1 / 1; /* square */
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      font-size: clamp(1em, 4vw, 1.5em); /* font scales with box */
+      font-size: clamp(1em, 4vw, 1.3em); /* font scales with box */
       font-weight: bold;
       color: #151259;
-      padding: 10px; /* padding inside box */
+      padding: 5px;
     }
+
 
     #countdown-container {
       max-width: 95vw; /* container will never overflow screen */
