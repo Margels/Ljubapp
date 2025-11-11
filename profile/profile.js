@@ -24,6 +24,7 @@ const prizeHistory = document.getElementById("prizeHistory");
 profileImage.src = `../assets/${username.toLowerCase()}.png`;
 profileName.textContent = username;
 totalPoints.textContent = "🎯 Total points: ...";
+localStorage.removeItem("currentGame")
 
 // --- LOAD DATA FROM FIREBASE ---
 const userRef = db.ref(`users/${username}`);
@@ -175,14 +176,20 @@ function updateTileTimer(tile, prize) {
 
   const claimedAt = new Date(prize.claimedAt);
   let expiry = null;
-
+  
   if (prize.duration.minutes) {
     expiry = new Date(claimedAt.getTime() + prize.duration.minutes * 60000);
   } else if (prize.duration.hours) {
     expiry = new Date(claimedAt.getTime() + prize.duration.hours * 3600000);
   } else if (prize.duration.days) {
-    expiry = new Date(claimedAt.getTime() + prize.duration.days * 24 * 3600000);
+    if (prize.duration.days === 1) {
+      expiry = new Date(claimedAt);
+      expiry.setHours(23, 59, 59, 999); // until midnight
+    } else {
+      expiry = new Date(claimedAt.getTime() + prize.duration.days * 24 * 3600000);
+    }
   }
+
 
   function refreshTimer() {
     const now = new Date();
