@@ -9,9 +9,15 @@ const firebaseConfig = {
   appId: "1:922849938749:web:59c06714af609e478d0954"
 };
 
-// If no currentGame, user already claimed a prize → redirect to profile
-if (!localStorage.getItem("currentGame")) {
-  window.location.replace("../profile/profile.html");
+// --- HANDLE RE-ENTRY CASE ---
+const currentGame = localStorage.getItem("currentGame");
+
+// If no currentGame → skip all game logic, go straight to profile
+if (!currentGame) {
+  document.addEventListener("DOMContentLoaded", () => {
+    window.location.replace("../profile/profile.html");
+  });
+  throw new Error("Game already completed — skipping result logic.");
 }
 
 // Disable back navigation
@@ -26,7 +32,7 @@ const username = localStorage.getItem("playerName") || "Player";
 let userPoints = parseInt(localStorage.getItem("userPoints") || "0");
 
 // NEW: dynamic game name
-const gameName = localStorage.getItem("currentGame") || "default-game";
+const gameName = currentGame;
 
 // --- DOM ELEMENTS ---
 const resultTitle = document.getElementById("resultTitle");
