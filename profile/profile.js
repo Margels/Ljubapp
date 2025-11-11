@@ -24,6 +24,7 @@ const prizeHistory = document.getElementById("prizeHistory");
 profileImage.src = `../assets/${username.toLowerCase()}.png`;
 profileName.textContent = username;
 totalPoints.textContent = "🎯 Total points: ...";
+localStorage.removeItem("currentGame")
 
 // --- LOAD DATA FROM FIREBASE ---
 const userRef = db.ref(`users/${username}`);
