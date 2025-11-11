@@ -19,10 +19,14 @@
     }
   </style>
   <script>
-    // Redirect after 5 seconds (5000 milliseconds)
-    setTimeout(function() {
-      window.location.href = 'next.html';
-    }, 5000);
+  setTimeout(() => {
+    const userPoints = parseInt(localStorage.getItem("userPoints") || "0");
+    if (userPoints > 0) {
+      window.location.href = "navigation.html"; // user has already played
+    } else {
+      window.location.href = "next.html"; // first time playing
+    }
+  }, 5000);
   </script>
 </head>
 <body>
