@@ -9,17 +9,17 @@ const firebaseConfig = {
   appId: "1:922849938749:web:59c06714af609e478d0954"
 };
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+// If no currentGame, user already claimed a prize → redirect to profile
+if (!localStorage.getItem("currentGame")) {
+  window.location.replace("../profile/profile.html");
+}
 
 // Disable back navigation
 history.pushState(null, null, location.href);
 window.onpopstate = () => history.go(1);
 
-// If no currentGame, user already claimed a prize → redirect to profile
-if (!localStorage.getItem("currentGame")) {
-  window.location.replace("../profile/profile.html");
-}
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
 // --- LOAD LOCAL DATA ---
 const username = localStorage.getItem("playerName") || "Player";
