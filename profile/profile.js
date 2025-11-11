@@ -26,6 +26,22 @@ profileName.textContent = username;
 totalPoints.textContent = "🎯 Total points: ...";
 localStorage.removeItem("currentGame")
 
+// Disable back navigation if coming from result page
+if (document.referrer.includes("result.html")) {
+  history.pushState(null, null, location.href);
+  window.onpopstate = () => history.go(1);
+}
+
+// Redirect to navigation if reloaded
+window.addEventListener("beforeunload", () => {
+  localStorage.setItem("redirectToNav", "true");
+});
+
+if (localStorage.getItem("redirectToNav") === "true") {
+  localStorage.removeItem("redirectToNav");
+  window.location.replace("../navigation.html");
+}
+
 // --- LOAD DATA FROM FIREBASE ---
 const userRef = db.ref(`users/${username}`);
 
