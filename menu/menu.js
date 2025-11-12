@@ -102,6 +102,12 @@ async function showRenatoMenu() {
   img.style.marginBottom = "10px";
   menuContainer.appendChild(img);
 
+  const nameEl = document.createElement("p");
+  nameEl.textContent = plate.name;
+  nameEl.style.fontWeight = "bold";
+  nameEl.style.marginBottom = "10px";
+  menuContainer.appendChild(nameEl);
+
   const subtitle = document.createElement("p");
   subtitle.textContent = "How would you rate your dish?";
   menuContainer.appendChild(subtitle);
@@ -114,6 +120,7 @@ async function showRenatoMenu() {
   for (let i = 1; i <= 5; i++) {
     const star = document.createElement("span");
     star.textContent = "★";
+    star.style.display = "inline-block";   // important for click
     star.addEventListener("click", () => {
       rating = i;
       starsDiv.querySelectorAll("span").forEach((s,j) => {
@@ -122,7 +129,7 @@ async function showRenatoMenu() {
     });
     starsDiv.appendChild(star);
   }
-
+  
   menuContainer.appendChild(starsDiv);
 
   const textarea = document.createElement("textarea");
