@@ -51,11 +51,6 @@ window.addEventListener("beforeunload", () => {
   localStorage.setItem("redirectToNav", "true");
 });
 
-if (localStorage.getItem("redirectToNav") === "true") {
-  localStorage.removeItem("redirectToNav");
-  window.location.replace("../navigation.html");
-}
-
 // --- LOAD DATA FROM FIREBASE ---
 const userRef = db.ref(`users/${username}`);
 
