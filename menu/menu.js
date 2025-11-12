@@ -28,25 +28,6 @@ function createNavigationButton() {
   return btn;
 }
 
-// --- Get average ratings for all rated plates ---
-async function getBestRatedPlates() {
-  const menuData = await db.ref("menu").get().then(snap => snap.val() || {});
-  const plates = await loadPlates();
-
-  const ratedPlates = Object.entries(menuData)
-    .filter(([_, v]) => v.rated && v.rating)
-    .map(([id, v]) => {
-      const info = plates.find(p => p.id === id);
-      return { id, name: info?.name || id, rating: v.rating };
-    });
-
-  if (!ratedPlates.length) return [];
-
-  // Sort by rating descending
-  ratedPlates.sort((a, b) => b.rating - a.rating);
-  return ratedPlates.slice(0, 3); // Top 3
-}
-
 // --- Martina view ---
 async function showMartinaMenu() {
   const menuData = await db.ref("menu").get().then(snap => snap.val() || {});
@@ -98,17 +79,13 @@ async function showMartinaMenu() {
 
   const saveBtn = document.createElement("button");
   saveBtn.textContent = "Save";
-  saveBtn.onclick = async () => {
+  saveBtn.onclick = () => {
     if (!selectedPlate) return alert("Please select a plate!");
-
-    await db.ref(`menu/${selectedPlate}`).set({
+    db.ref(`menu/${selectedPlate}`).set({
       timestamp: new Date().toISOString(),
       rated: false,
       comments: ""
-    });
-
-    alert("Plate saved!");
-    setTimeout(() => (window.location.href = "../navigation.html"), 600);
+    }).then(() => alert("Plate saved!"));
   };
   menuContainer.appendChild(saveBtn);
 }
@@ -131,31 +108,7 @@ async function showRenatoMenu() {
     const emptyState = document.createElement("p");
     emptyState.className = "empty-state";
     emptyState.textContent = "Today's menu is not available yet! Try again later.";
-    menuContainer.append(emptyState);
-
-    // --- Add "Best voted dishes so far" ---
-    const best = await getBestRatedPlates();
-    if (best.length) {
-      const subtitle = document.createElement("h3");
-      subtitle.textContent = "Best voted dishes so far:";
-      subtitle.style.marginTop = "30px";
-      subtitle.style.fontWeight = "600";
-      menuContainer.appendChild(subtitle);
-
-      const list = document.createElement("ul");
-      list.style.listStyle = "none";
-      list.style.padding = "0";
-      list.style.marginTop = "10px";
-      best.forEach(p => {
-        const li = document.createElement("li");
-        li.textContent = `⭐ ${p.name} — ${p.rating}/5`;
-        li.style.margin = "6px 0";
-        list.appendChild(li);
-      });
-      menuContainer.appendChild(list);
-    }
-
-    menuContainer.appendChild(createNavigationButton());
+    menuContainer.append(emptyState, createNavigationButton());
     return;
   }
 
