@@ -76,4 +76,16 @@ textarea {
   padding: 10px;
   margin-bottom: 20px;
   resize: vertical;
+  border: 1px solid white;       
+  background-color: transparent;  
+  color: white;                  
+}
+
+textarea::placeholder {
+  color: gray;                    
+}
+
+button {
+  display: block;
+  margin: 20px auto 0 auto;
 }
