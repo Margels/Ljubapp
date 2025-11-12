@@ -46,11 +46,6 @@ window.addEventListener("popstate", function () {
   window.history.pushState(null, null, window.location.href);
 });
 
-// Redirect to navigation if reloaded
-window.addEventListener("beforeunload", () => {
-  localStorage.setItem("redirectToNav", "true");
-});
-
 // --- LOAD DATA FROM FIREBASE ---
 const userRef = db.ref(`users/${username}`);
 
