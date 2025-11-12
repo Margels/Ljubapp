@@ -30,13 +30,6 @@ h2 {
   color: #151259;
 }
 
-.ingredient img {
-  width: 60px;
-  height: 60px;
-  border-radius: 12px;
-  object-fit: cover;
-}
-
 .ingredient input[type="radio"] {
   accent-color: #151259;   /* color of circle when selected */
   transform: scale(1.3);    /* make it slightly bigger */
