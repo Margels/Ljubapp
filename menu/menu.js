@@ -38,7 +38,6 @@ async function showMartinaMenu() {
 
     tile.innerHTML = `
       <input type="radio" name="plate" value="${plate.id}" />
-      <img src="${plate.image}" />
       <span>${plate.name}</span>
     `;
 
