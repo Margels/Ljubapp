@@ -11,19 +11,32 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// --- Get username ---
 const username = (localStorage.getItem("playerName") || "Player").toLowerCase();
 const menuContainer = document.getElementById("menu-container");
 
 // --- Load plates JSON ---
 async function loadPlates() {
-  const response = await fetch("../files/plates.json"); // correct path
+  const response = await fetch("../files/plates.json");
   const plates = await response.json();
   return plates;
 }
 
 // --- Martina view ---
 async function showMartinaMenu() {
+  const menuData = await db.ref("menu").get().then(snap => snap.val() || {});
+  const hasUnrated = Object.values(menuData).some(v => !v.rated);
+
+  if (hasUnrated) {
+    const stopCard = document.createElement("div");
+    stopCard.className = "stop-card";
+    stopCard.innerHTML = `
+      <h3>STOP</h3>
+      <p>Let Renato rate his latest plate first</p>
+    `;
+    menuContainer.appendChild(stopCard);
+    return;
+  }
+
   const plates = await loadPlates();
 
   const title = document.createElement("h2");
@@ -42,11 +55,8 @@ async function showMartinaMenu() {
     `;
 
     tile.addEventListener("click", () => {
-      // Deselect others
       document.querySelectorAll("label.ingredient").forEach(t => t.classList.remove("checked"));
       tile.classList.add("checked");
-
-      // Select the radio input
       tile.querySelector("input").checked = true;
       selectedPlate = plate.id;
     });
@@ -74,7 +84,19 @@ async function showRenatoMenu() {
   const unrated = Object.entries(menuData).find(([_, v]) => !v.rated);
 
   if (!unrated) {
-    menuContainer.innerHTML = `<p style="opacity:0.6;">Today's menu is not available yet! Try again later.</p>`;
+    const title = document.createElement("h2");
+    title.textContent = "Nothing to see here";
+    menuContainer.appendChild(title);
+
+    const emptyState = document.createElement("p");
+    emptyState.className = "empty-state";
+    emptyState.textContent = "Today's menu is not available yet! Try again later.";
+    menuContainer.appendChild(emptyState);
+
+    const backBtn = document.createElement("button");
+    backBtn.textContent = "Go Back";
+    backBtn.addEventListener("click", () => window.location.href = "../navigation.html");
+    menuContainer.appendChild(backBtn);
     return;
   }
 
@@ -82,7 +104,7 @@ async function showRenatoMenu() {
 
   // Plate image
   const img = document.createElement("img");
-  img.src = `files/${plateId}.jpg`; // or your actual image path
+  img.src = `../files/${plateId}.jpg`; // corrected relative path
   img.style.width = "200px";
   img.style.borderRadius = "12px";
   img.style.marginBottom = "10px";
@@ -133,7 +155,10 @@ async function showRenatoMenu() {
       rated: true,
       rating,
       comments: textarea.value || "",
-    }).then(() => alert("Thank you for your feedback!"));
+    }).then(() => {
+      alert("Thank you for your feedback!");
+      setTimeout(() => (window.location.href = "../navigation.html"), 1000);
+    });
   });
 
   menuContainer.appendChild(submitBtn);
