@@ -12,11 +12,12 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 // --- Get username ---
-const username = localStorage.getItem("playerName") || "Player";
+const username = (localStorage.getItem("playerName") || "Player").toLowerCase();
 const menuContainer = document.getElementById("menu-container");
 
+// --- Load plates JSON ---
 async function loadPlates() {
-  const response = await fetch("../files/plates.json");
+  const response = await fetch("../files/plates.json"); // correct path
   const plates = await response.json();
   return plates;
 }
@@ -36,17 +37,16 @@ async function showMartinaMenu() {
     tile.className = "ingredient";
 
     tile.innerHTML = `
-      <img src="${plate.image}" class="tile-img" />
-      <span class="tile-label">${plate.name}</span>
-      <input type="radio" name="plate" value="${plate.id}" style="display:none" />
+      <img src="${plate.image}" />
+      <span>${plate.name}</span>
+      <input type="radio" name="plate" value="${plate.id}" />
     `;
 
     tile.addEventListener("click", () => {
-      // deselect others
       document.querySelectorAll("label.ingredient").forEach(t => t.classList.remove("checked"));
       tile.classList.add("checked");
-      selectedPlate = plate.id;
       tile.querySelector("input").checked = true;
+      selectedPlate = plate.id;
     });
 
     menuContainer.appendChild(tile);
@@ -57,10 +57,9 @@ async function showMartinaMenu() {
   saveBtn.onclick = () => {
     if (!selectedPlate) return alert("Please select a plate!");
     db.ref(`menu/${selectedPlate}`).set({
-      selectedPlate,
+      timestamp: new Date().toISOString(),
       rated: false,
-      comments: "",
-      timestamp: new Date().toISOString()
+      comments: ""
     }).then(() => alert("Plate saved!"));
   };
 
@@ -72,10 +71,10 @@ async function showRenatoMenu() {
   const menuRef = db.ref("menu");
   const snapshot = await menuRef.get();
   const menuData = snapshot.val();
-  
+
   // Find first unrated plate
   const unratedEntry = Object.entries(menuData || {}).find(([id, data]) => !data.rated);
-  
+
   if (!unratedEntry) {
     const msg = document.createElement("p");
     msg.textContent = "Today's menu is not available yet! Try again later.";
@@ -83,11 +82,10 @@ async function showRenatoMenu() {
     menuContainer.appendChild(msg);
     return;
   }
-  
+
   const [plateId, plateData] = unratedEntry;
   const plates = await loadPlates();
   const plate = plates.find(p => p.id === plateId);
-
 
   const title = document.createElement("h2");
   title.textContent = "Menu";
@@ -95,7 +93,10 @@ async function showRenatoMenu() {
 
   const img = document.createElement("img");
   img.src = plate.image;
-  img.className = "tile-img";
+  img.style.width = "120px";
+  img.style.height = "120px";
+  img.style.borderRadius = "12px";
+  img.style.objectFit = "cover";
   img.style.marginBottom = "10px";
   menuContainer.appendChild(img);
 
@@ -141,8 +142,8 @@ async function showRenatoMenu() {
 }
 
 // --- Main ---
-if (username.toLowerCase() === "martina") {
+if (username === "martina") {
   showMartinaMenu();
-} else if (username.toLowerCase() === "renato") {
+} else if (username === "renato") {
   showRenatoMenu();
 }
