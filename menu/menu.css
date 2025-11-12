@@ -11,6 +11,7 @@ h2 {
   margin-bottom: 20px;
 }
 
+/* --- TILE STYLE --- */
 .ingredient {
   display: flex;
   align-items: center;
@@ -37,9 +38,13 @@ h2 {
 }
 
 .ingredient input[type="radio"] {
-  display: none;
+  accent-color: #151259;   /* color of circle when selected */
+  transform: scale(1.3);    /* make it slightly bigger */
+  display: inline-block;    /* visible */
+  margin-right: 12px;
 }
 
+/* --- BUTTON STYLE --- */
 button {
   margin-top: 30px;
   background-color: white;
@@ -56,6 +61,7 @@ button:hover {
   transform: scale(1.05);
 }
 
+/* --- STAR RATING / TEXTAREA --- */
 .stars {
   display: flex;
   justify-content: center;
