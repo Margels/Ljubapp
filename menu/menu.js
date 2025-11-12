@@ -56,7 +56,7 @@ async function showMartinaMenu() {
   saveBtn.textContent = "Save";
   saveBtn.onclick = () => {
     if (!selectedPlate) return alert("Please select a plate!");
-    db.ref(`menu/martina`).set({
+    db.ref(`menu/${selectedPlate}`).set({
       selectedPlate,
       rated: false,
       comments: "",
@@ -69,20 +69,25 @@ async function showMartinaMenu() {
 
 // --- Renato view ---
 async function showRenatoMenu() {
-  const menuRef = db.ref("menu/martina");
+  const menuRef = db.ref("menu");
   const snapshot = await menuRef.get();
-  const data = snapshot.val();
-
-  if (!data || !data.selectedPlate || data.rated) {
+  const menuData = snapshot.val();
+  
+  // Find first unrated plate
+  const unratedEntry = Object.entries(menuData || {}).find(([id, data]) => !data.rated);
+  
+  if (!unratedEntry) {
     const msg = document.createElement("p");
     msg.textContent = "Today's menu is not available yet! Try again later.";
     msg.style.color = "gray";
     menuContainer.appendChild(msg);
     return;
   }
-
+  
+  const [plateId, plateData] = unratedEntry;
   const plates = await loadPlates();
-  const plate = plates.find(p => p.id === data.selectedPlate);
+  const plate = plates.find(p => p.id === plateId);
+
 
   const title = document.createElement("h2");
   title.textContent = "Menu";
@@ -125,7 +130,7 @@ async function showRenatoMenu() {
   submitBtn.textContent = "Submit";
   submitBtn.onclick = () => {
     if (rating === 0) return alert("Please select a rating!");
-    menuRef.update({
+    db.ref(`menu/${plateId}`).update({
       rated: true,
       rating,
       comments: textarea.value
