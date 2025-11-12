@@ -9,6 +9,7 @@ body {
 h2 {
   font-size: 1.6rem;
   margin-bottom: 20px;
+  font-weight: 700;
 }
 
 /* --- TILE STYLE --- */
@@ -86,7 +87,7 @@ textarea {
   border-radius: 8px;
   padding: 12px;
   resize: vertical;
-  border: 1px rgba(255, 255, 255, 0.2);
+  border: 1px solid white;
   background-color: transparent;
   color: white;
   font-family: 'Poppins', sans-serif;
@@ -109,7 +110,7 @@ textarea::placeholder {
   background-color: rgba(255, 255, 255, 0.2);
   color: white;
   border-radius: 16px;
-  padding: 30px 20px 40px 20px; /* more padding bottom */
+  padding: 30px 20px 40px 20px;
   width: 90%;
   max-width: 500px;
   margin: 40px auto;
@@ -120,4 +121,19 @@ textarea::placeholder {
 .stop-icon {
   font-size: 2rem;
   margin-bottom: 10px;
+}
+
+/* --- PLATE TITLE --- */
+.plate-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+/* --- PLATE NAME --- */
+.plate-name {
+  font-weight: 500;
+  font-size: 1.1rem;
+  margin-bottom: 20px;
+  opacity: 0.9;
 }
