@@ -4,7 +4,7 @@ const firebaseConfig = {
   authDomain: "ljubapp.firebaseapp.com",
   databaseURL: "https://ljubapp-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "ljubapp",
-  storageBucket: "ljubapp.firebasestorage.app",
+  storageBucket: "ljubapp.firebasedestorage.app",
   messagingSenderId: "922849938749",
   appId: "1:922849938749:web:59c06714af609e478d0954"
 };
@@ -21,6 +21,14 @@ async function loadPlates() {
   return plates;
 }
 
+// --- Reusable navigation button ---
+function createNavigationButton() {
+  const btn = document.createElement("button");
+  btn.textContent = "Return to navigation";
+  btn.addEventListener("click", () => (window.location.href = "../navigation.html"));
+  return btn;
+}
+
 // --- Martina view ---
 async function showMartinaMenu() {
   const menuData = await db.ref("menu").get().then(snap => snap.val() || {});
@@ -33,6 +41,7 @@ async function showMartinaMenu() {
       <div class="stop-icon">⚠️</div>
       <p>Let Renato rate his latest plate first</p>
     `;
+    stopCard.appendChild(createNavigationButton());
     menuContainer.appendChild(stopCard);
     return;
   }
@@ -45,10 +54,7 @@ async function showMartinaMenu() {
     empty.textContent = "No plates available right now.";
     menuContainer.appendChild(empty);
 
-    const backBtn = document.createElement("button");
-    backBtn.textContent = "Return to navigation";
-    backBtn.addEventListener("click", () => (window.location.href = "../navigation.html"));
-    menuContainer.appendChild(backBtn);
+    menuContainer.appendChild(createNavigationButton());
     return;
   }
 
@@ -106,10 +112,7 @@ async function showRenatoMenu() {
     emptyState.textContent = "Today's menu is not available yet! Try again later.";
     menuContainer.appendChild(emptyState);
 
-    const backBtn = document.createElement("button");
-    backBtn.textContent = "Go Back";
-    backBtn.addEventListener("click", () => window.location.href = "../navigation.html");
-    menuContainer.appendChild(backBtn);
+    menuContainer.appendChild(createNavigationButton());
     return;
   }
 
@@ -117,10 +120,10 @@ async function showRenatoMenu() {
   const plates = await loadPlates();
   const plateInfo = plates.find(p => p.id === plateId);
 
-  // Menu title
-  const menuTitle = document.createElement("div");
-  menuTitle.className = "plate-title";
+  // Menu title above plate image
+  const menuTitle = document.createElement("h2");
   menuTitle.textContent = "Menu";
+  menuTitle.style.marginBottom = "10px";
   menuContainer.appendChild(menuTitle);
 
   // Plate image
@@ -133,13 +136,15 @@ async function showRenatoMenu() {
     menuContainer.appendChild(img);
   }
 
-  // Plate name (bigger and bolder now)
+  // Plate name (bigger and bolder)
   const nameEl = document.createElement("p");
-  nameEl.className = "plate-name";
   nameEl.textContent = plateInfo?.name || plateId;
+  nameEl.style.fontWeight = "700";
+  nameEl.style.fontSize = "1.6rem";
+  nameEl.style.marginBottom = "15px";
   menuContainer.appendChild(nameEl);
 
-  // Question (smaller now)
+  // Question (smaller, medium weight)
   const title = document.createElement("h2");
   title.textContent = "How would you rate your dish?";
   title.style.fontWeight = "500";
@@ -169,6 +174,7 @@ async function showRenatoMenu() {
   // Textarea
   const textarea = document.createElement("textarea");
   textarea.placeholder = "Additional comments...";
+  textarea.style.border = "1px solid rgba(255,255,255,0.2)";
   menuContainer.appendChild(textarea);
 
   // Submit button
