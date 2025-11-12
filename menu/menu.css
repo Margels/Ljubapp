@@ -86,7 +86,7 @@ textarea {
   border-radius: 8px;
   padding: 12px;
   resize: vertical;
-  border: 1px solid white;
+  border: 1px rgba(255, 255, 255, 0.2);
   background-color: transparent;
   color: white;
   font-family: 'Poppins', sans-serif;
