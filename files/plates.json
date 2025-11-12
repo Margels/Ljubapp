@@ -5,6 +5,26 @@
     "image": "../assets/amatriciana.png"
   },
   {
+    "id": "toasties",
+    "name": "Toasties",
+    "image": "../assets/toasties.png"
+  },
+  {
+    "id": "bruschetta",
+    "name": "Bruschetta",
+    "image": "../assets/bruschetta.png"
+  },
+  {
+    "id": "fonzies",
+    "name": "Fonzies",
+    "image": "../assets/fonzies.png"
+  },
+  {
+    "id": "tiramisu",
+    "name": "Tiramisù",
+    "image": "../assets/tiramisu.png"
+  },
+  {
     "id": "risotto",
     "name": "Risotto allo zafferano",
     "image": "../assets/risotto.png"
@@ -23,5 +43,10 @@
     "id": "cotechino",
     "name": "Cotechino and potatoes",
     "image": "../assets/cotechino.png"
+  },
+  {
+    "id": "lasagne",
+    "name": "Lasagne",
+    "image": "../assets/lasagne.png"
   }
 ]
