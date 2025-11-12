@@ -9,6 +9,21 @@ const firebaseConfig = {
   appId: "1:922849938749:web:59c06714af609e478d0954"
 };
 
+// --- HANDLE RE-ENTRY CASE ---
+const currentGame = localStorage.getItem("currentGame");
+
+// If no currentGame → skip all game logic, go straight to profile
+if (!currentGame) {
+  document.addEventListener("DOMContentLoaded", () => {
+    window.location.replace("../profile/profile.html");
+  });
+  throw new Error("Game already completed — skipping result logic.");
+}
+
+// Disable back navigation
+history.pushState(null, null, location.href);
+window.onpopstate = () => history.go(1);
+
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
@@ -16,8 +31,8 @@ const db = firebase.database();
 const username = localStorage.getItem("playerName") || "Player";
 let userPoints = parseInt(localStorage.getItem("userPoints") || "0");
 
-// ✅ NEW: dynamic game name
-const gameName = localStorage.getItem("currentGame") || "default-game";
+// NEW: dynamic game name
+const gameName = currentGame;
 
 // --- DOM ELEMENTS ---
 const resultTitle = document.getElementById("resultTitle");
@@ -106,24 +121,29 @@ function loadPrizes() {
 confirmPrizeBtn.addEventListener("click", async () => {
   if (!selectedPrize) return;
 
-  // Deduct points
-  userPoints -= selectedPrize.points;
-  localStorage.setItem("userPoints", userPoints);
-
-  // Prepare prize data (⚠️ unclaimed — no claimedAt yet)
-  const prizeData = {
-    title: selectedPrize.title,
-    emoji: selectedPrize.emoji,
-    points: selectedPrize.points,
-    duration: selectedPrize.duration || {},
-    status: "unclaimed"
-  };
-
-  const userRef = db.ref(`users/${username}`);
-
-  // Save updated points and add prize to user history
-  await userRef.update({ points: userPoints });
-  await userRef.child("prizesCollected").push(prizeData);
+  // Proceed only if user has just played (prevent re enter page through back button)
+  const currentGame = localStorage.getItem("currentGame");
+  if (currentGame) {
+      
+    // Deduct points
+    userPoints -= selectedPrize.points;
+    localStorage.setItem("userPoints", userPoints);
+  
+    // Prepare prize data (⚠️ unclaimed — no claimedAt yet)
+    const prizeData = {
+      title: selectedPrize.title,
+      emoji: selectedPrize.emoji,
+      points: selectedPrize.points,
+      duration: selectedPrize.duration || {},
+      status: "unclaimed"
+    };
+  
+    const userRef = db.ref(`users/${username}`);
+  
+    // Save updated points and add prize to user history
+    await userRef.update({ points: userPoints });
+    await userRef.child("prizesCollected").push(prizeData);
+  }
 
   // Redirect to profile
   window.location.href = "../profile/profile.html";

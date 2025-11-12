@@ -1,0 +1,27 @@
+[
+  {
+    "id": "amatriciana",
+    "name": "Pasta all'amatriciana",
+    "image": "../assets/amatriciana.png"
+  },
+  {
+    "id": "risotto",
+    "name": "Risotto allo zafferano",
+    "image": "../assets/risotto.png"
+  },
+  {
+    "id": "palacinke",
+    "name": "Palacinke",
+    "image": "../assets/palacinke.png"
+  },
+  {
+    "id": "ragout",
+    "name": "Pasta al ragù",
+    "image": "../assets/ragout.png"
+  },
+  {
+    "id": "cotechino",
+    "name": "Cotechino and potatoes",
+    "image": "../assets/cotechino.png"
+  }
+]

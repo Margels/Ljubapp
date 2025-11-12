@@ -11,6 +11,25 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+// --- AUTO-REDIRECT AFTER INACTIVITY (safe version) ---
+(function setupIdleRedirect() {
+  let idleTimer;
+
+  function resetTimer() {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => {
+      // redirect one level up to navigation.html
+      window.location.replace("../navigation.html");
+    }, 30000); // 30 seconds
+  }
+
+  // Register activity listeners
+  window.addEventListener("load", resetTimer);
+  document.addEventListener("mousemove", resetTimer);
+  document.addEventListener("touchstart", resetTimer);
+  document.addEventListener("keydown", resetTimer);
+})();
+
 // --- LOAD USER DATA ---
 const username = localStorage.getItem("playerName") || "Player";
 
@@ -25,6 +44,12 @@ profileImage.src = `../assets/${username.toLowerCase()}.png`;
 profileName.textContent = username;
 totalPoints.textContent = "🎯 Total points: ...";
 localStorage.removeItem("currentGame")
+
+// --- DISABLE BACK NAVIGATION UNIVERSALLY ---
+window.history.pushState(null, null, window.location.href);
+window.addEventListener("popstate", function () {
+  window.history.pushState(null, null, window.location.href);
+});
 
 // --- LOAD DATA FROM FIREBASE ---
 const userRef = db.ref(`users/${username}`);
