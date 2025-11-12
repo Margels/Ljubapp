@@ -31,9 +31,9 @@ h2 {
 }
 
 .ingredient input[type="radio"] {
-  accent-color: #151259;   /* color of circle when selected */
-  transform: scale(1.3);    /* make it slightly bigger */
-  display: inline-block;    /* visible */
+  accent-color: #151259;   
+  transform: scale(1.3);    
+  display: inline-block;   
   margin-right: 12px;
 }
 
@@ -54,35 +54,45 @@ button:hover {
   transform: scale(1.05);
 }
 
-/* --- STAR RATING / TEXTAREA --- */
 .stars {
   display: flex;
   justify-content: center;
-  gap: 5px;
-  margin: 15px 0;
-  font-size: 1.5rem;
-  cursor: pointer;
+  gap: 10px;
+  margin: 15px 0 25px 0;
 }
 
-.stars span:hover,
+.stars span {
+  font-size: 2.5rem;           
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.2); 
+  transition: color 0.2s ease, transform 0.1s ease;
+}
+
+.stars span:hover {
+  transform: scale(1.1);
+}
+
 .stars span.selected {
-  color: gold;
+  color: white;                   
 }
 
 textarea {
-  width: 100%;
+  display: block;
+  width: 90%;
   max-width: 500px;
+  margin: 0 auto 20px auto;
   border-radius: 8px;
-  padding: 10px;
-  margin-bottom: 20px;
+  padding: 12px;
   resize: vertical;
-  border: 1px solid white;       
-  background-color: transparent;  
-  color: white;                  
+  border: 1px solid white;
+  background-color: transparent;
+  color: white;
+  font-family: 'Poppins', sans-serif;
+  font-size: 1rem;
 }
 
 textarea::placeholder {
-  color: gray;                    
+  color: rgba(255, 255, 255, 0.6);
 }
 
 button {
