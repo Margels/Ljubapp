@@ -16,7 +16,7 @@ const username = localStorage.getItem("playerName") || "Player";
 const menuContainer = document.getElementById("menu-container");
 
 async function loadPlates() {
-  const response = await fetch("/files/plates.json");
+  const response = await fetch("../files/plates.json");
   const plates = await response.json();
   return plates;
 }
