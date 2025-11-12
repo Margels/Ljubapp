@@ -21,15 +21,104 @@ async function loadPlates() {
 }
 
 // --- Reusable navigation button ---
-function createNavigationButton() {
+function createNavigationButton(text = "Return to navigation") {
   const btn = document.createElement("button");
-  btn.textContent = "Return to navigation";
+  btn.textContent = text;
   btn.addEventListener("click", () => (window.location.href = "../navigation.html"));
   return btn;
 }
 
+// --- Build a "best voted" list from Firebase menu entries (rating must exist) ---
+async function getBestVotedFromFirebase() {
+  // Reads menu/ and returns array [{ id, name, avg, votes }]
+  const [menuSnap, plates] = await Promise.all([
+    db.ref("menu").get().then(s => s.val() || {}),
+    loadPlates()
+  ]);
+
+  // build map id -> plateName
+  const platesMap = {};
+  (plates || []).forEach(p => { platesMap[p.id] = p.name || p.id; });
+
+  // collect rated entries
+  const ratedEntries = Object.entries(menuSnap)
+    .map(([id, data]) => {
+      if (data && typeof data.rating === "number") {
+        return {
+          id,
+          name: platesMap[id] || id,
+          rating: data.rating,
+          timestamp: data.timestamp || null
+        };
+      }
+      return null;
+    })
+    .filter(Boolean);
+
+  if (ratedEntries.length === 0) return [];
+
+  // If there can be multiple entries per plate (e.g. multiple ratings stored), group by id
+  const grouped = ratedEntries.reduce((acc, e) => {
+    if (!acc[e.id]) acc[e.id] = { name: e.name, total: 0, votes: 0 };
+    acc[e.id].total += e.rating;
+    acc[e.id].votes += 1;
+    return acc;
+  }, {});
+
+  const result = Object.entries(grouped).map(([id, g]) => ({
+    id,
+    name: g.name,
+    avg: g.total / g.votes,
+    votes: g.votes
+  }));
+
+  // sort descending by average rating then by votes
+  result.sort((a, b) => {
+    if (b.avg === a.avg) return b.votes - a.votes;
+    return b.avg - a.avg;
+  });
+
+  return result;
+}
+
+// --- Render a best-voted block (returns element) ---
+function renderBestVotedBlock(items) {
+  const wrap = document.createElement("div");
+  wrap.style.marginTop = "20px";
+  wrap.style.width = "100%";
+  wrap.style.maxWidth = "560px";
+  wrap.style.marginLeft = "auto";
+  wrap.style.marginRight = "auto";
+
+  const subtitle = document.createElement("p");
+  subtitle.textContent = "Best voted dishes so far:";
+  subtitle.style.opacity = "0.85";
+  subtitle.style.marginBottom = "8px";
+  subtitle.style.fontWeight = "600";
+  wrap.appendChild(subtitle);
+
+  items.forEach((it, idx) => {
+    const tile = document.createElement("div");
+    tile.style.backgroundColor = "rgba(255,255,255,0.2)";
+    tile.style.borderRadius = "8px";
+    tile.style.padding = "8px 12px";
+    tile.style.margin = "6px auto";
+    tile.style.width = "90%";
+    tile.style.maxWidth = "480px";
+    tile.style.display = "flex";
+    tile.style.justifyContent = "space-between";
+    tile.style.alignItems = "center";
+    tile.style.fontSize = "0.95rem";
+    tile.innerHTML = `<span>${idx + 1}. ${it.name}</span><span style="opacity:0.95">⭐ ${it.avg.toFixed(1)} (${it.votes})</span>`;
+    wrap.appendChild(tile);
+  });
+
+  return wrap;
+}
+
 // --- Martina view ---
 async function showMartinaMenu() {
+  menuContainer.innerHTML = ""; // clear
   const menuData = await db.ref("menu").get().then(snap => snap.val() || {});
   const hasUnrated = Object.values(menuData).some(v => !v.rated);
 
@@ -40,7 +129,7 @@ async function showMartinaMenu() {
       <div class="stop-icon">⚠️</div>
       <p>Let Renato rate his latest plate first</p>
     `;
-    stopCard.appendChild(createNavigationButton());
+    stopCard.appendChild(createNavigationButton("Return to navigation"));
     menuContainer.appendChild(stopCard);
     return;
   }
@@ -51,7 +140,7 @@ async function showMartinaMenu() {
     const empty = document.createElement("p");
     empty.className = "empty-state";
     empty.textContent = "No plates available right now.";
-    menuContainer.append(empty, createNavigationButton());
+    menuContainer.append(empty, createNavigationButton("Return to navigation"));
     return;
   }
 
@@ -79,28 +168,36 @@ async function showMartinaMenu() {
 
   const saveBtn = document.createElement("button");
   saveBtn.textContent = "Save";
-  saveBtn.onclick = () => {
+  saveBtn.onclick = async () => {
     if (!selectedPlate) return alert("Please select a plate!");
-    db.ref(`menu/${selectedPlate}`).set({
+    // Save then redirect immediately
+    await db.ref(`menu/${selectedPlate}`).set({
       timestamp: new Date().toISOString(),
       rated: false,
       comments: ""
-    }).then(() => alert("Plate saved!"));
+    });
+    // immediate redirect
+    window.location.href = "../navigation.html";
   };
   menuContainer.appendChild(saveBtn);
 }
 
 // --- Renato view ---
 async function showRenatoMenu() {
+  menuContainer.innerHTML = ""; // clear
+
   const menuData = await db.ref("menu").get().then(snap => snap.val() || {});
   const unrated = Object.entries(menuData).find(([_, v]) => !v.rated);
 
+  // if no unrated plate, show empty state + best voted block if any
   if (!unrated) {
+    // empty image
     const emptyImg = document.createElement("img");
     emptyImg.src = "../assets/plates/000empty.png";
     emptyImg.className = "empty-image";
     menuContainer.appendChild(emptyImg);
 
+    // title + empty message
     const title = document.createElement("h2");
     title.textContent = "Nothing to see here";
     menuContainer.appendChild(title);
@@ -108,11 +205,23 @@ async function showRenatoMenu() {
     const emptyState = document.createElement("p");
     emptyState.className = "empty-state";
     emptyState.textContent = "Today's menu is not available yet! Try again later.";
-    menuContainer.append(emptyState, createNavigationButton());
+    menuContainer.appendChild(emptyState);
+
+    // nav button
+    menuContainer.appendChild(createNavigationButton("Go Back"));
+
+    // show best voted dishes from firebase (if any)
+    const best = await getBestVotedFromFirebase();
+    if (best.length) {
+      const bestBlock = renderBestVotedBlock(best);
+      menuContainer.appendChild(bestBlock);
+    }
+
     return;
   }
 
-  const [plateId, plate] = unrated;
+  // There is an unrated plate: show rating UI
+  const [plateId] = unrated;
   const plates = await loadPlates();
   const plateInfo = plates.find(p => p.id === plateId);
 
@@ -125,6 +234,7 @@ async function showRenatoMenu() {
   menuTitle.textContent = "Menu";
   contentWrapper.appendChild(menuTitle);
 
+  // image (if available)
   if (plateInfo?.image) {
     const img = document.createElement("img");
     img.src = plateInfo.image;
@@ -145,12 +255,14 @@ async function showRenatoMenu() {
   q.style.fontSize = "1.2rem";
   contentWrapper.appendChild(q);
 
+  // --- STARS (full-star only) ---
   const starsDiv = document.createElement("div");
   starsDiv.className = "stars";
   let rating = 0;
   for (let i = 1; i <= 5; i++) {
     const star = document.createElement("span");
     star.textContent = "★";
+    star.style.userSelect = "none";
     star.addEventListener("click", () => {
       rating = i;
       starsDiv.querySelectorAll("span").forEach((s, j) => {
@@ -170,17 +282,32 @@ async function showRenatoMenu() {
   submitBtn.addEventListener("click", async () => {
     if (!rating) return alert("Please rate the dish!");
 
-    // hide content immediately
+    // hide content immediately (prevent double-click)
     contentWrapper.classList.add("fade-out");
 
+    // update Firebase
     await db.ref(`menu/${plateId}`).update({
       rated: true,
       rating,
-      comments: textarea.value || "",
+      comments: textarea.value || ""
     });
 
-    alert("Thank you for your feedback!");
-    setTimeout(() => (window.location.href = "../navigation.html"), 800);
+    // show best voted list briefly (optional) before redirect
+    const best = await getBestVotedFromFirebase();
+    if (best.length) {
+      const bestBlock = renderBestVotedBlock(best);
+      menuContainer.appendChild(bestBlock);
+    }
+
+    // quick confirmation (non-blocking)
+    const msg = document.createElement("p");
+    msg.textContent = "Thank you for your feedback!";
+    msg.style.marginTop = "16px";
+    msg.style.opacity = "0.95";
+    menuContainer.appendChild(msg);
+
+    // redirect shortly after (gives user a moment to see thank you)
+    setTimeout(() => (window.location.href = "../navigation.html"), 900);
   });
   contentWrapper.appendChild(submitBtn);
 }
