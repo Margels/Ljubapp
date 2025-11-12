@@ -117,6 +117,12 @@ async function showRenatoMenu() {
   const plates = await loadPlates();
   const plateInfo = plates.find(p => p.id === plateId);
 
+  // Menu title
+  const menuTitle = document.createElement("div");
+  menuTitle.className = "plate-title";
+  menuTitle.textContent = "Menu";
+  menuContainer.appendChild(menuTitle);
+
   // Plate image
   if (plateInfo?.image) {
     const img = document.createElement("img");
@@ -127,20 +133,17 @@ async function showRenatoMenu() {
     menuContainer.appendChild(img);
   }
 
-  // Plate name (smaller, lighter)
+  // Plate name (bigger and bolder now)
   const nameEl = document.createElement("p");
+  nameEl.className = "plate-name";
   nameEl.textContent = plateInfo?.name || plateId;
-  nameEl.style.fontWeight = "400";
-  nameEl.style.fontSize = "1.1rem";
-  nameEl.style.marginBottom = "20px";
-  nameEl.style.opacity = "0.9";
   menuContainer.appendChild(nameEl);
 
-  // Title (bigger, bold)
+  // Question (smaller now)
   const title = document.createElement("h2");
   title.textContent = "How would you rate your dish?";
-  title.style.fontWeight = "700";
-  title.style.fontSize = "1.6rem";
+  title.style.fontWeight = "500";
+  title.style.fontSize = "1.2rem";
   title.style.marginBottom = "15px";
   menuContainer.appendChild(title);
 
