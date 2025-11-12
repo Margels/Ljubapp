@@ -11,19 +11,24 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// Reload after 30 seconds of inactivity
-/*let idleTimer;
-function resetTimer() {
-  clearTimeout(idleTimer);
-  idleTimer = setTimeout(() => {
-    window.location.replace("../navigation.html");
-  }, 30000); // 30 seconds
-}
+// --- AUTO-REDIRECT AFTER INACTIVITY (safe version) ---
+(function setupIdleRedirect() {
+  let idleTimer;
 
-window.onload = resetTimer;
-document.onmousemove = resetTimer;
-document.ontouchstart = resetTimer;
-document.onkeydown = resetTimer;*/
+  function resetTimer() {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => {
+      // redirect one level up to navigation.html
+      window.location.replace("../navigation.html");
+    }, 30000); // 30 seconds
+  }
+
+  // Register activity listeners
+  window.addEventListener("load", resetTimer);
+  document.addEventListener("mousemove", resetTimer);
+  document.addEventListener("touchstart", resetTimer);
+  document.addEventListener("keydown", resetTimer);
+})();
 
 // --- LOAD USER DATA ---
 const username = localStorage.getItem("playerName") || "Player";
