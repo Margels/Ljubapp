@@ -70,49 +70,37 @@ async function showMartinaMenu() {
 
 // --- Renato view ---
 async function showRenatoMenu() {
-  const menuRef = db.ref("menu");
-  const snapshot = await menuRef.get();
-  const menuData = snapshot.val();
+  const menuData = await db.ref("menu").get().then(snap => snap.val() || {});
+  const unrated = Object.entries(menuData).find(([_, v]) => !v.rated);
 
-  // Find first unrated plate
-  const unratedEntry = Object.entries(menuData || {}).find(([id, data]) => !data.rated);
-
-  if (!unratedEntry) {
-    const msg = document.createElement("p");
-    msg.textContent = "Today's menu is not available yet! Try again later.";
-    msg.style.color = "gray";
-    menuContainer.appendChild(msg);
+  if (!unrated) {
+    menuContainer.innerHTML = `<p style="opacity:0.6;">Today's menu is not available yet! Try again later.</p>`;
     return;
   }
 
-  const [plateId, plateData] = unratedEntry;
-  const plates = await loadPlates();
-  const plate = plates.find(p => p.id === plateId);
+  const [plateId, plate] = unrated;
 
-  const title = document.createElement("h2");
-  title.textContent = "Menu";
-  menuContainer.appendChild(title);
-
+  // Plate image
   const img = document.createElement("img");
-  img.src = plate.image;
-  img.style.width = "120px";
-  img.style.height = "120px";
+  img.src = `files/${plateId}.jpg`; // or your actual image path
+  img.style.width = "200px";
   img.style.borderRadius = "12px";
-  img.style.objectFit = "cover";
   img.style.marginBottom = "10px";
   menuContainer.appendChild(img);
 
+  // Plate name
   const nameEl = document.createElement("p");
-  nameEl.textContent = plate.name;
+  nameEl.textContent = plateId.charAt(0).toUpperCase() + plateId.slice(1);
   nameEl.style.fontWeight = "bold";
-  nameEl.style.marginBottom = "10px";
+  nameEl.style.marginBottom = "20px";
   menuContainer.appendChild(nameEl);
 
-  const subtitle = document.createElement("p");
-  subtitle.textContent = "How would you rate your dish?";
-  menuContainer.appendChild(subtitle);
+  // Title
+  const title = document.createElement("h2");
+  title.textContent = "How would you rate your dish?";
+  menuContainer.appendChild(title);
 
-  // star rating
+  // Stars
   const starsDiv = document.createElement("div");
   starsDiv.className = "stars";
   let rating = 0;
@@ -120,32 +108,33 @@ async function showRenatoMenu() {
   for (let i = 1; i <= 5; i++) {
     const star = document.createElement("span");
     star.textContent = "★";
-    star.style.display = "inline-block";   // important for click
     star.addEventListener("click", () => {
       rating = i;
-      starsDiv.querySelectorAll("span").forEach((s,j) => {
+      starsDiv.querySelectorAll("span").forEach((s, j) => {
         s.classList.toggle("selected", j < i);
       });
     });
     starsDiv.appendChild(star);
   }
-  
+
   menuContainer.appendChild(starsDiv);
 
+  // Textarea
   const textarea = document.createElement("textarea");
   textarea.placeholder = "Additional comments...";
   menuContainer.appendChild(textarea);
 
+  // Submit button
   const submitBtn = document.createElement("button");
   submitBtn.textContent = "Submit";
-  submitBtn.onclick = () => {
-    if (rating === 0) return alert("Please select a rating!");
+  submitBtn.addEventListener("click", () => {
+    if (!rating) return alert("Please rate the dish!");
     db.ref(`menu/${plateId}`).update({
       rated: true,
       rating,
-      comments: textarea.value
+      comments: textarea.value || "",
     }).then(() => alert("Thank you for your feedback!"));
-  };
+  });
 
   menuContainer.appendChild(submitBtn);
 }
