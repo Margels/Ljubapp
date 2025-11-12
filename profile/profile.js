@@ -18,12 +18,12 @@ function resetTimer() {
   idleTimer = setTimeout(() => {
     window.location.replace("../navigation.html");
   }, 30000); // 30 seconds
-}*/
+}
 
 window.onload = resetTimer;
 document.onmousemove = resetTimer;
 document.ontouchstart = resetTimer;
-document.onkeydown = resetTimer;
+document.onkeydown = resetTimer;*/
 
 // --- LOAD USER DATA ---
 const username = localStorage.getItem("playerName") || "Player";
