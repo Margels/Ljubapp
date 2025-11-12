@@ -28,36 +28,6 @@ function createNavigationButton() {
   return btn;
 }
 
-// --- Get and sort dish ratings (localStorage) ---
-function getSortedDishes() {
-  const data = JSON.parse(localStorage.getItem("dishRatings") || "{}");
-  return Object.entries(data)
-    .map(([dish, info]) => ({
-      dish,
-      avg: info.totalStars / info.votes
-    }))
-    .sort((a, b) => b.avg - a.avg);
-}
-
-function renderTopDishes() {
-  const topDishesDiv = document.createElement("div");
-  topDishesDiv.id = "topDishes";
-  const sorted = getSortedDishes();
-
-  if (sorted.length === 0) return topDishesDiv; // skip empty
-
-  topDishesDiv.innerHTML = `
-    <h3 style="margin-top:25px;font-size:1.1rem;opacity:0.8;">Best Voted Dishes</h3>
-    ${sorted.map(
-      (d, i) =>
-        `<div style="background-color:rgba(255,255,255,0.2);border-radius:8px;margin:5px auto;padding:6px 10px;width:80%;font-size:0.95rem;opacity:0.8;">
-          ${i + 1}. ${d.dish} — ⭐️ ${d.avg.toFixed(1)}
-        </div>`
-    ).join("")}
-  `;
-  return topDishesDiv;
-}
-
 // --- Martina view ---
 async function showMartinaMenu() {
   const menuData = await db.ref("menu").get().then(snap => snap.val() || {});
@@ -115,10 +85,7 @@ async function showMartinaMenu() {
       timestamp: new Date().toISOString(),
       rated: false,
       comments: ""
-    }).then(() => {
-      alert("Plate saved!");
-      window.location.href = "../navigation.html"; // ✅ instant redirect
-    });
+    }).then(() => alert("Plate saved!"));
   };
   menuContainer.appendChild(saveBtn);
 }
@@ -158,6 +125,15 @@ async function showRenatoMenu() {
   menuTitle.textContent = "Menu";
   contentWrapper.appendChild(menuTitle);
 
+  if (plateInfo?.image) {
+    const img = document.createElement("img");
+    img.src = plateInfo.image;
+    img.style.width = "200px";
+    img.style.borderRadius = "12px";
+    img.style.marginBottom = "10px";
+    contentWrapper.appendChild(img);
+  }
+
   const nameEl = document.createElement("p");
   nameEl.className = "plate-name";
   nameEl.textContent = plateInfo?.name || plateId;
@@ -169,7 +145,6 @@ async function showRenatoMenu() {
   q.style.fontSize = "1.2rem";
   contentWrapper.appendChild(q);
 
-  // --- STARS ---
   const starsDiv = document.createElement("div");
   starsDiv.className = "stars";
   let rating = 0;
@@ -204,22 +179,8 @@ async function showRenatoMenu() {
       comments: textarea.value || "",
     });
 
-    // --- Update localStorage stats for top dishes ---
-    const allData = JSON.parse(localStorage.getItem("dishRatings") || "{}");
-    if (!allData[plateInfo.name]) allData[plateInfo.name] = { totalStars: 0, votes: 0 };
-    allData[plateInfo.name].totalStars += rating;
-    allData[plateInfo.name].votes += 1;
-    localStorage.setItem("dishRatings", JSON.stringify(allData));
-
     alert("Thank you for your feedback!");
-
-    // Add top dishes list before redirect
-    const topList = renderTopDishes();
-    if (topList.innerHTML.trim()) {
-      menuContainer.appendChild(topList);
-    }
-
-    setTimeout(() => (window.location.href = "../navigation.html"), 1200);
+    setTimeout(() => (window.location.href = "../navigation.html"), 800);
   });
   contentWrapper.appendChild(submitBtn);
 }
