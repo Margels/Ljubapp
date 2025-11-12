@@ -55,3 +55,26 @@ button {
 button:hover {
   transform: scale(1.05);
 }
+
+.stars {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  margin: 15px 0;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.stars span:hover,
+.stars span.selected {
+  color: gold;
+}
+
+textarea {
+  width: 100%;
+  max-width: 500px;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 20px;
+  resize: vertical;
+}
