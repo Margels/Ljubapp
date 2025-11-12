@@ -17,8 +17,7 @@ const menuContainer = document.getElementById("menu-container");
 // --- Load plates JSON ---
 async function loadPlates() {
   const response = await fetch("../files/plates.json");
-  const plates = await response.json();
-  return plates;
+  return await response.json();
 }
 
 // --- Reusable navigation button ---
@@ -52,9 +51,7 @@ async function showMartinaMenu() {
     const empty = document.createElement("p");
     empty.className = "empty-state";
     empty.textContent = "No plates available right now.";
-    menuContainer.appendChild(empty);
-
-    menuContainer.appendChild(createNavigationButton());
+    menuContainer.append(empty, createNavigationButton());
     return;
   }
 
@@ -67,19 +64,16 @@ async function showMartinaMenu() {
   plates.forEach(plate => {
     const tile = document.createElement("label");
     tile.className = "ingredient";
-
     tile.innerHTML = `
       <input type="radio" name="plate" value="${plate.id}" />
       <span>${plate.name}</span>
     `;
-
     tile.addEventListener("click", () => {
-      document.querySelectorAll("label.ingredient").forEach(t => t.classList.remove("checked"));
+      document.querySelectorAll(".ingredient").forEach(t => t.classList.remove("checked"));
       tile.classList.add("checked");
       tile.querySelector("input").checked = true;
       selectedPlate = plate.id;
     });
-
     menuContainer.appendChild(tile);
   });
 
@@ -93,7 +87,6 @@ async function showMartinaMenu() {
       comments: ""
     }).then(() => alert("Plate saved!"));
   };
-
   menuContainer.appendChild(saveBtn);
 }
 
@@ -103,6 +96,11 @@ async function showRenatoMenu() {
   const unrated = Object.entries(menuData).find(([_, v]) => !v.rated);
 
   if (!unrated) {
+    const emptyImg = document.createElement("img");
+    emptyImg.src = "../assets/plates/000empty.png";
+    emptyImg.className = "empty-image";
+    menuContainer.appendChild(emptyImg);
+
     const title = document.createElement("h2");
     title.textContent = "Nothing to see here";
     menuContainer.appendChild(title);
@@ -110,9 +108,7 @@ async function showRenatoMenu() {
     const emptyState = document.createElement("p");
     emptyState.className = "empty-state";
     emptyState.textContent = "Today's menu is not available yet! Try again later.";
-    menuContainer.appendChild(emptyState);
-
-    menuContainer.appendChild(createNavigationButton());
+    menuContainer.append(emptyState, createNavigationButton());
     return;
   }
 
@@ -120,43 +116,38 @@ async function showRenatoMenu() {
   const plates = await loadPlates();
   const plateInfo = plates.find(p => p.id === plateId);
 
-  // Menu title above plate image
+  // Create a content wrapper (to hide after submit)
+  const contentWrapper = document.createElement("div");
+  contentWrapper.id = "content";
+  menuContainer.appendChild(contentWrapper);
+
   const menuTitle = document.createElement("h2");
   menuTitle.textContent = "Menu";
-  menuTitle.style.marginBottom = "10px";
-  menuContainer.appendChild(menuTitle);
+  contentWrapper.appendChild(menuTitle);
 
-  // Plate image
   if (plateInfo?.image) {
     const img = document.createElement("img");
     img.src = plateInfo.image;
     img.style.width = "200px";
     img.style.borderRadius = "12px";
     img.style.marginBottom = "10px";
-    menuContainer.appendChild(img);
+    contentWrapper.appendChild(img);
   }
 
-  // Plate name (bigger and bolder)
   const nameEl = document.createElement("p");
+  nameEl.className = "plate-name";
   nameEl.textContent = plateInfo?.name || plateId;
-  nameEl.style.fontWeight = "700";
-  nameEl.style.fontSize = "1.6rem";
-  nameEl.style.marginBottom = "15px";
-  menuContainer.appendChild(nameEl);
+  contentWrapper.appendChild(nameEl);
 
-  // Question (smaller, medium weight)
-  const title = document.createElement("h2");
-  title.textContent = "How would you rate your dish?";
-  title.style.fontWeight = "500";
-  title.style.fontSize = "1.2rem";
-  title.style.marginBottom = "15px";
-  menuContainer.appendChild(title);
+  const q = document.createElement("h2");
+  q.textContent = "How would you rate your dish?";
+  q.style.fontWeight = "500";
+  q.style.fontSize = "1.2rem";
+  contentWrapper.appendChild(q);
 
-  // Stars
   const starsDiv = document.createElement("div");
   starsDiv.className = "stars";
   let rating = 0;
-
   for (let i = 1; i <= 5; i++) {
     const star = document.createElement("span");
     star.textContent = "★";
@@ -168,31 +159,30 @@ async function showRenatoMenu() {
     });
     starsDiv.appendChild(star);
   }
+  contentWrapper.appendChild(starsDiv);
 
-  menuContainer.appendChild(starsDiv);
-
-  // Textarea
   const textarea = document.createElement("textarea");
   textarea.placeholder = "Additional comments...";
-  textarea.style.border = "1px solid rgba(255,255,255,0.2)";
-  menuContainer.appendChild(textarea);
+  contentWrapper.appendChild(textarea);
 
-  // Submit button
   const submitBtn = document.createElement("button");
   submitBtn.textContent = "Submit";
-  submitBtn.addEventListener("click", () => {
+  submitBtn.addEventListener("click", async () => {
     if (!rating) return alert("Please rate the dish!");
-    db.ref(`menu/${plateId}`).update({
+
+    // hide content immediately
+    contentWrapper.classList.add("fade-out");
+
+    await db.ref(`menu/${plateId}`).update({
       rated: true,
       rating,
       comments: textarea.value || "",
-    }).then(() => {
-      alert("Thank you for your feedback!");
-      setTimeout(() => (window.location.href = "../navigation.html"), 1000);
     });
-  });
 
-  menuContainer.appendChild(submitBtn);
+    alert("Thank you for your feedback!");
+    setTimeout(() => (window.location.href = "../navigation.html"), 800);
+  });
+  contentWrapper.appendChild(submitBtn);
 }
 
 // --- Main ---
