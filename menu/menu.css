@@ -101,8 +101,16 @@ textarea::placeholder {
 /* --- EMPTY STATE --- */
 .empty-state {
   opacity: 0.6;
-  margin-top: 40px;
+  margin-top: 20px;
   font-size: 1rem;
+}
+
+/* --- EMPTY IMAGE --- */
+.empty-image {
+  width: 160px;
+  opacity: 0.8;
+  margin-bottom: 10px;
+  border-radius: 12px;
 }
 
 /* --- STOP CARD --- */
@@ -136,4 +144,11 @@ textarea::placeholder {
   font-size: 1.6rem;
   margin-bottom: 20px;
   opacity: 0.9;
+}
+
+/* --- CONTENT HIDE ANIMATION --- */
+.fade-out {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
 }
