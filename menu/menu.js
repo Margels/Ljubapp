@@ -30,7 +30,7 @@ async function showMartinaMenu() {
     const stopCard = document.createElement("div");
     stopCard.className = "stop-card";
     stopCard.innerHTML = `
-      <h3>STOP</h3>
+      <div class="stop-icon">⚠️</div>
       <p>Let Renato rate his latest plate first</p>
     `;
     menuContainer.appendChild(stopCard);
@@ -38,6 +38,19 @@ async function showMartinaMenu() {
   }
 
   const plates = await loadPlates();
+
+  if (!plates.length) {
+    const empty = document.createElement("p");
+    empty.className = "empty-state";
+    empty.textContent = "No plates available right now.";
+    menuContainer.appendChild(empty);
+
+    const backBtn = document.createElement("button");
+    backBtn.textContent = "Return to navigation";
+    backBtn.addEventListener("click", () => (window.location.href = "../navigation.html"));
+    menuContainer.appendChild(backBtn);
+    return;
+  }
 
   const title = document.createElement("h2");
   title.textContent = "What will you cook tonight?";
@@ -101,25 +114,34 @@ async function showRenatoMenu() {
   }
 
   const [plateId, plate] = unrated;
+  const plates = await loadPlates();
+  const plateInfo = plates.find(p => p.id === plateId);
 
   // Plate image
-  const img = document.createElement("img");
-  img.src = `../files/${plateId}.jpg`; // corrected relative path
-  img.style.width = "200px";
-  img.style.borderRadius = "12px";
-  img.style.marginBottom = "10px";
-  menuContainer.appendChild(img);
+  if (plateInfo?.image) {
+    const img = document.createElement("img");
+    img.src = plateInfo.image;
+    img.style.width = "200px";
+    img.style.borderRadius = "12px";
+    img.style.marginBottom = "10px";
+    menuContainer.appendChild(img);
+  }
 
-  // Plate name
+  // Plate name (smaller, lighter)
   const nameEl = document.createElement("p");
-  nameEl.textContent = plateId.charAt(0).toUpperCase() + plateId.slice(1);
-  nameEl.style.fontWeight = "bold";
+  nameEl.textContent = plateInfo?.name || plateId;
+  nameEl.style.fontWeight = "400";
+  nameEl.style.fontSize = "1.1rem";
   nameEl.style.marginBottom = "20px";
+  nameEl.style.opacity = "0.9";
   menuContainer.appendChild(nameEl);
 
-  // Title
+  // Title (bigger, bold)
   const title = document.createElement("h2");
   title.textContent = "How would you rate your dish?";
+  title.style.fontWeight = "700";
+  title.style.fontSize = "1.6rem";
+  title.style.marginBottom = "15px";
   menuContainer.appendChild(title);
 
   // Stars
