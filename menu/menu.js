@@ -37,14 +37,17 @@ async function showMartinaMenu() {
     tile.className = "ingredient";
 
     tile.innerHTML = `
+      <input type="radio" name="plate" value="${plate.id}" />
       <img src="${plate.image}" />
       <span>${plate.name}</span>
-      <input type="radio" name="plate" value="${plate.id}" />
     `;
 
     tile.addEventListener("click", () => {
+      // Deselect others
       document.querySelectorAll("label.ingredient").forEach(t => t.classList.remove("checked"));
       tile.classList.add("checked");
+
+      // Select the radio input
       tile.querySelector("input").checked = true;
       selectedPlate = plate.id;
     });
