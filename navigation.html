@@ -179,23 +179,33 @@
 
     function showNavigation() {
       const player = localStorage.getItem('playerName') || 'Player';
+      const now = new Date();
+      const quizUnlockDate = new Date('2025-11-27T15:00:00'); // 27 Nov 2025, 3pm
+    
       content.innerHTML = `
         <img src="assets/ljubapp-logo-small.png" alt="Ljubapp Logo" class="logo" />
         <p class="description">
           Welcome back, <strong>${player}</strong>!<br>
           Use this page to navigate through the experiences.
         </p>
-
+    
         <a href="profile/profile.html" class="tile">
           <span>Profile</span>
           <span class="arrow">➔</span>
         </a>
-
+    
         <a href="menu/menu.html" class="tile">
           <span>Menu</span>
           <span class="arrow">➔</span>
         </a>
-
+    
+        ${now >= quizUnlockDate ? `
+        <a href="../guess/guess.html" class="tile">
+          <span>Quiz</span>
+          <span class="arrow">➔</span>
+        </a>
+        ` : ''}
+    
         <footer>Ljubapp © 2025</footer>
       `;
     }
