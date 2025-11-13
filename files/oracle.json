@@ -1,0 +1,29 @@
+[
+  {
+    "id": 1,
+    "title": "Which movie are we watching?",
+    "correctAnswerId": 0,
+    "answers": [
+      {
+        "id": 0,
+        "emoji": "🐻",
+        "title": "brother bear"
+      },
+      {
+        "id": 1,
+        "emoji": "✂️",
+        "title": "edward scissorhands"
+      },
+      {
+        "id": 2,
+        "emoji": "❓",
+        "title": "test"
+      },
+      {
+        "id": 3,
+        "emoji": "❓",
+        "title": "test"
+      },
+    ]
+  }
+]
