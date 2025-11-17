@@ -128,18 +128,11 @@ function renderPage(container, questionObj, points, index) {
     let winner = "";
     let maxPoints = 0;
 
-    const renatoRef = db.ref("users/Renato/points");
     const martinaRef = db.ref("users/Martina/points");
-
-    const renatoPointsSnap = await renatoRef.once("value");
     const martinaPointsSnap = await martinaRef.once("value");
-
-    let renatoPoints = renatoPointsSnap.val() ?? 0;
     let martinaPoints = martinaPointsSnap.val() ?? 0;
 
-    // -------------------------
-    // Determine result category
-    // -------------------------
+    // Determine result
     if (selected === correct) {
       winner = "Renato";
       maxPoints = 5;
@@ -164,30 +157,21 @@ function renderPage(container, questionObj, points, index) {
       martinaPoints += 5;
     }
 
-    // -------------------------
     // Write game summary
-    // -------------------------
-    await db.ref("oracle-game/gameSummary").set({
+    await db.ref("oracle-game/questions/" + index + "/gameSummary").set({
       winner,
       maxPoints
     });
 
-    // -------------------------
-    // Save updated points
-    // -------------------------
-    await renatoRef.set(renatoPoints);
+    // Save Martina points automatically
     await martinaRef.set(martinaPoints);
 
-    // -------------------------
     // Move to next question
-    // -------------------------
     await db.ref("oracle-game/questions/currentIndex").set(index + 1);
 
-    // -------------------------
     // Store selected answer for result page
-    // -------------------------
     localStorage.setItem("oracle-answer-picked", selected);
-    localStorage.setItem("currentGame", "oracle-game");
+    localStorage.setItem("currentGame", "oracle-game/questions/" + index);
 
     window.location.href = "../result/result.html";
   });
