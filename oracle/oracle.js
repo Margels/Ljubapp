@@ -15,7 +15,7 @@ const db = firebase.database();
 document.addEventListener("DOMContentLoaded", async () => {
   const container = document.querySelector(".oracle-container");
 
-  // Load username from storage
+  // Load username
   const username = localStorage.getItem("playerName");
   if (!username) {
     container.innerHTML = `<h1>Error</h1><p>No username found.</p>`;
@@ -52,7 +52,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // Render the full UI
   renderPage(container, question, userPoints, currentIndex);
 });
 
@@ -68,8 +67,9 @@ function showEmpty(container) {
 }
 
 
+
 // ---------------------------------------------------
-// MAIN PAGE RENDER
+// MAIN PAGE
 // ---------------------------------------------------
 function renderPage(container, questionObj, points, index) {
   container.innerHTML = `
@@ -96,7 +96,6 @@ function renderPage(container, questionObj, points, index) {
   const submitButton = container.querySelector("#submitAnswer");
 
   const shuffled = shuffleArray(questionObj.answers.options);
-
   let selected = null;
 
   shuffled.forEach(answer => {
@@ -117,23 +116,79 @@ function renderPage(container, questionObj, points, index) {
     optionsContainer.appendChild(div);
   });
 
+  // ---------------------------------------------------
+  // SUBMIT logic with Firebase writes
+  // ---------------------------------------------------
   submitButton.addEventListener("click", async () => {
     if (!selected) return;
 
-    // Save to localStorage
-    localStorage.setItem("currentGame", "oracle-game");
+    const correct = questionObj.answers.correct;
+    const close = questionObj.answers.close;
 
-    // Update index
-    await firebase.database()
-      .ref("oracle-game/questions/currentIndex")
-      .set(index + 1);
+    let winner = "";
+    let maxPoints = 0;
 
-    // Save chosen answer to use on result page
+    const renatoRef = db.ref("users/Renato/points");
+    const martinaRef = db.ref("users/Martina/points");
+
+    const renatoPointsSnap = await renatoRef.once("value");
+    const martinaPointsSnap = await martinaRef.once("value");
+
+    let renatoPoints = renatoPointsSnap.val() ?? 0;
+    let martinaPoints = martinaPointsSnap.val() ?? 0;
+
+    // -------------------------
+    // Determine result category
+    // -------------------------
+    if (selected === correct) {
+      winner = "Renato";
+      maxPoints = 5;
+
+      renatoPoints += 5;
+
+    } else if (selected === close) {
+      winner = "Both";
+      maxPoints = 2;
+
+      renatoPoints += 2;
+      martinaPoints += 2;
+
+    } else {
+      winner = "Martina";
+      maxPoints = 5;
+
+      martinaPoints += 5;
+    }
+
+    // -------------------------
+    // Write game summary
+    // -------------------------
+    await db.ref("oracle-game/gameSummary").set({
+      winner,
+      maxPoints
+    });
+
+    // -------------------------
+    // Save updated points
+    // -------------------------
+    await renatoRef.set(renatoPoints);
+    await martinaRef.set(martinaPoints);
+
+    // -------------------------
+    // Move to next question
+    // -------------------------
+    await db.ref("oracle-game/questions/currentIndex").set(index + 1);
+
+    // -------------------------
+    // Store selected answer for result page
+    // -------------------------
     localStorage.setItem("oracle-answer-picked", selected);
+    localStorage.setItem("currentGame", "oracle-game");
 
     window.location.href = "../result/result.html";
   });
 }
+
 
 
 // ---------------------------------------------------
