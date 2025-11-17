@@ -12,7 +12,6 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   -webkit-tap-highlight-color: transparent;
-  -webkit-overflow-scrolling: touch;
 }
 
 .oracle-container {
@@ -23,13 +22,14 @@ body {
   margin-top: 2rem;
 }
 
+/* TEXT */
 h1 {
-  font-size: 2.5rem;
+  font-size: 2rem;
   margin-bottom: 1rem;
 }
 
 .description {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   line-height: 1.6;
   opacity: 0.95;
   margin-bottom: 2rem;
@@ -39,7 +39,50 @@ h1 {
   font-size: 1.8rem;
   margin-top: 1rem;
 }
-
 #pointsValue {
   font-weight: bold;
 }
+
+/* ANSWER TILE (copied from grocery.css) */
+.answer-tile {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 12px;
+  border-radius: 12px;
+  margin: 12px 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1.1rem;
+}
+
+.answer-tile.checked {
+  background-color: white;
+  color: #151259;
+}
+
+/* BUTTON (matches grocery.css) */
+button {
+  margin-top: 30px;
+  background-color: white;
+  color: #151259;
+  padding: 12px 25px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+  font-size: 1.05rem;
+}
+
+button:disabled {
+  opacity: 0.5;
+  transform: none;
+  cursor: not-allowed;
+}
+
+button:hover:not(:disabled) {
+  transform: scale(1.05);
+}
+
