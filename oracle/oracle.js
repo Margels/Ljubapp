@@ -11,68 +11,80 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+
 document.addEventListener("DOMContentLoaded", async () => {
   const container = document.querySelector(".oracle-container");
 
-  // Fetch oracle game data
+  // Load username from storage
+  const username = localStorage.getItem("username");
+  if (!username) {
+    container.innerHTML = `<h1>Error</h1><p>No username found.</p>`;
+    return;
+  }
+
+  // Load user points
+  const userSnapshot = await db.ref(`users/${username}/points`).once("value");
+  const userPoints = userSnapshot.val() ?? 0;
+
+  // Load oracle data
   const snapshot = await db.ref("oracle-game/questions").once("value");
   const data = snapshot.val();
 
-  if (!data) return;
+  if (!data) {
+    container.innerHTML = `<h1>Error loading game</h1>`;
+    return;
+  }
 
   let currentIndex = data.currentIndex;
-  const currentQuestion = data[currentIndex];
+  const question = data[currentIndex];
 
-  // Validate data
-  if (!currentQuestion || !currentQuestion.timestamp) {
-    showEmptyState(container);
+  if (!question || !question.timestamp) {
+    showEmpty(container);
     return;
   }
 
-  // Convert timestamp to Date
-  const questionTime = new Date(currentQuestion.timestamp);
   const now = new Date();
+  const unlockTime = new Date(question.timestamp);
+  const answered = question.answerData?.answered === true;
 
-  // Conditions:
-  // 1. not answered
-  // 2. timestamp <= now
-  const answered = currentQuestion.answerData?.answered === true;
-  const timestampValid = questionTime <= now;
-
-  if (!timestampValid || answered) {
-    showEmptyState(container);
+  if (answered || now < unlockTime) {
+    showEmpty(container);
     return;
   }
 
-  // If we reach here → show question
-  showQuestionUI(container, currentQuestion, currentIndex);
+  // Render the full UI
+  renderPage(container, question, userPoints, currentIndex);
 });
 
 
-// -----------------------------------------------------
+// ---------------------------------------------------
 // EMPTY STATE
-// -----------------------------------------------------
-function showEmptyState(container) {
+// ---------------------------------------------------
+function showEmpty(container) {
   container.innerHTML = `
     <h1>No questions for you yet 💭</h1>
-    <p class="description">
-      Come back later for more future-predicting activities.
-    </p>
+    <p class="description">Come back later for more future-predicting activities.</p>
   `;
 }
 
 
-// -----------------------------------------------------
-// QUESTION UI
-// -----------------------------------------------------
-function showQuestionUI(container, questionObj, index) {
-  // Keep the top points + description already in html
-  // Append the question section
-  const section = document.createElement("div");
+// ---------------------------------------------------
+// MAIN PAGE RENDER
+// ---------------------------------------------------
+function renderPage(container, questionObj, points, index) {
+  container.innerHTML = `
+    <h1>Have you been paying attention? 👂🏻</h1>
 
-  const shuffledOptions = shuffleArray(questionObj.answers.options);
+    <p class="description">
+      Listen and watch carefully: <strong>your opponent has been dropping hints about what will happen next</strong>! 
+      Use this information to answer the question below and win 5 points 🔮 <br><br>
+      Careful: some hints might be lies! If you're wrong, your opponent earns 5 points. <br><br>
+      If you choose the close answer, both of you earn <strong>2 points</strong>. <br><br>
+      Good luck, Oracle!
+    </p>
 
-  section.innerHTML = `
+    <h2 id="pointsLabel">Points: <span id="pointsValue">${points}</span></h2>
+
     <h2 style="margin-top: 2rem; font-size: 1.6rem;">${questionObj.question}</h2>
 
     <div id="answerOptions"></div>
@@ -80,58 +92,53 @@ function showQuestionUI(container, questionObj, index) {
     <button id="submitAnswer" disabled>Continue</button>
   `;
 
-  container.appendChild(section);
+  const optionsContainer = container.querySelector("#answerOptions");
+  const submitButton = container.querySelector("#submitAnswer");
 
-  const optionsContainer = section.querySelector("#answerOptions");
-  const submitButton = section.querySelector("#submitAnswer");
+  const shuffled = shuffleArray(questionObj.answers.options);
 
-  let selectedAnswer = null;
+  let selected = null;
 
-  shuffledOptions.forEach((opt, i) => {
-    const optionDiv = document.createElement("div");
-    optionDiv.classList.add("ingredient"); // same styling as groceries
-    optionDiv.textContent = opt;
-    optionDiv.dataset.answer = opt;
+  shuffled.forEach(answer => {
+    const div = document.createElement("div");
+    div.className = "answer-tile";
+    div.textContent = answer;
 
-    optionDiv.addEventListener("click", () => {
-      selectedAnswer = opt;
+    div.addEventListener("click", () => {
+      selected = answer;
 
-      // Remove selection from all others
-      optionsContainer.querySelectorAll(".ingredient").forEach(div => {
-        div.classList.remove("checked");
-      });
+      optionsContainer.querySelectorAll(".answer-tile")
+        .forEach(t => t.classList.remove("checked"));
 
-      // Mark current
-      optionDiv.classList.add("checked");
-
+      div.classList.add("checked");
       submitButton.disabled = false;
     });
 
-    optionsContainer.appendChild(optionDiv);
+    optionsContainer.appendChild(div);
   });
 
-  // Submit answer
   submitButton.addEventListener("click", async () => {
-    if (!selectedAnswer) return;
+    if (!selected) return;
 
-    // 1. Update Firebase currentIndex
-    await firebase.database()
-      .ref(`oracle-game/questions/currentIndex`)
-      .set(index + 1);
-
-    // 2. Save localStorage
+    // Save to localStorage
     localStorage.setItem("currentGame", "oracle-game");
 
-    // 3. Redirect
+    // Update index
+    await firebase.database()
+      .ref("oracle-game/questions/currentIndex")
+      .set(index + 1);
+
+    // Save chosen answer to use on result page
+    localStorage.setItem("oracle-answer-picked", selected);
+
     window.location.href = "../result/result.html";
   });
 }
 
 
-
-// -----------------------------------------------------
-// UTILITY — Shuffle
-// -----------------------------------------------------
+// ---------------------------------------------------
+// SHUFFLE
+// ---------------------------------------------------
 function shuffleArray(arr) {
   let a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
