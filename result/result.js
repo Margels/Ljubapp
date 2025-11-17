@@ -31,6 +31,9 @@ const db = firebase.database();
 const username = localStorage.getItem("playerName") || "Player";
 let userPoints = parseInt(localStorage.getItem("userPoints") || "0");
 
+// Immediately reset localStorage so reloading won’t give points again
+localStorage.setItem("userPoints", "0");
+
 // NEW: dynamic game name
 const gameName = currentGame;
 
