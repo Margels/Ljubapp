@@ -120,6 +120,7 @@ function renderPage(container, questionObj, points, index) {
   // SUBMIT logic with Firebase writes
   // ---------------------------------------------------
   submitButton.addEventListener("click", async () => {
+  try {
     if (!selected) return;
 
     const correct = questionObj.answers.correct;
@@ -132,51 +133,39 @@ function renderPage(container, questionObj, points, index) {
     const martinaPointsSnap = await martinaRef.once("value");
     let martinaPoints = martinaPointsSnap.val() ?? 0;
 
-    // Determine result
     if (selected === correct) {
       winner = "Renato";
       maxPoints = 5;
-      
-      if (username === "Renato") {
-        localStorage.setItem("userPoints", 5);
-        }
-
+      if (username === "Renato") localStorage.setItem("userPoints", 5);
     } else if (selected === close) {
       winner = "Both";
       maxPoints = 2;
-
       martinaPoints += 2;
-      if (username === "Renato") {
-        localStorage.setItem("userPoints", 2);
-        }
-
+      if (username === "Renato") localStorage.setItem("userPoints", 2);
     } else {
       winner = "Martina";
       maxPoints = 5;
-
       martinaPoints += 5;
     }
 
-    // Write game summary
-    await db.ref("oracle-game/questions/" + index + "/gameSummary").set({
+    await db.ref(`oracle-game/questions/${index}/gameSummary`).set({
       winner,
       maxPoints
     });
 
-    // Save Martina points automatically
     await martinaRef.set(martinaPoints);
 
-    // Move to next question
     await db.ref("oracle-game/questions/currentIndex").set(index + 1);
 
-    // Store selected answer for result page
     localStorage.setItem("oracle-answer-picked", selected);
-    localStorage.setItem("currentGame", "oracle-game/questions/" + index);
+    localStorage.setItem("currentGame", `oracle-game/questions/${index}`);
 
     window.location.href = "../result/result.html";
-  });
-}
-
+  } catch (err) {
+    console.error("Error in submit button:", err);
+    alert("Something went wrong. Check console.");
+  }
+});
 
 
 // ---------------------------------------------------
