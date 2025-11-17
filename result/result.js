@@ -63,7 +63,7 @@ db.ref(`${gameName}/gameSummary`).once("value").then(async snapshot => {
   await userRef.update({ points: totalPoints });
 
   // --- Update localStorage too ---
-  localStorage.setItem("userPoints", totalPoints);
+  localStorage.setItem("totalPoints", totalPoints);
 
   // --- Update UI based on winner ---
   if (winner === username) {
@@ -91,7 +91,7 @@ function loadPrizes() {
         card.dataset.title = prize.title;
         card.dataset.points = prize.points;
 
-        const canAfford = userPoints >= prize.points;
+        const canAfford = totalPoints >= prize.points;
 
         card.innerHTML = `
           <div class="prize-emoji">${prize.emoji}</div>
@@ -126,8 +126,8 @@ confirmPrizeBtn.addEventListener("click", async () => {
   if (currentGame) {
       
     // Deduct points
-    userPoints -= selectedPrize.points;
-    localStorage.setItem("userPoints", userPoints);
+    totalPoints -= selectedPrize.points;
+    localStorage.setItem("totalPoints", totalPoints);
   
     // Prepare prize data (⚠️ unclaimed — no claimedAt yet)
     const prizeData = {
@@ -141,7 +141,7 @@ confirmPrizeBtn.addEventListener("click", async () => {
     const userRef = db.ref(`users/${username}`);
   
     // Save updated points and add prize to user history
-    await userRef.update({ points: userPoints });
+    await userRef.update({ points: totalPoints });
     await userRef.child("prizesCollected").push(prizeData);
   }
 
@@ -156,12 +156,12 @@ profileBtn.addEventListener("click", async () => {
 
   if (!snapshot.exists()) {
     await userRef.set({
-      points: userPoints,
+      points: totalPoints,
       prizesCollected: {}
     });
   } else {
     // make sure points are synced anyway
-    await userRef.child("points").set(userPoints);
+    await userRef.child("points").set(totalPoints);
   }
 
   window.location.href = "../profile/profile.html";
