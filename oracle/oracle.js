@@ -143,15 +143,19 @@ function renderPage(container, questionObj, points, index) {
     if (selected === correct) {
       winner = "Renato";
       maxPoints = 5;
-
-      renatoPoints += 5;
+      
+      if (username === "Renato") {
+        localStorage.setItem("userPoints", 5);
+        }
 
     } else if (selected === close) {
       winner = "Both";
       maxPoints = 2;
 
-      renatoPoints += 2;
       martinaPoints += 2;
+      if (username === "Renato") {
+        localStorage.setItem("userPoints", 2);
+        }
 
     } else {
       winner = "Martina";
