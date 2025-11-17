@@ -34,6 +34,9 @@ let userPoints = parseInt(localStorage.getItem("userPoints") || "0");
 // NEW: dynamic game name
 const gameName = currentGame;
 
+// --- GLOBAL totalPoints ---
+let totalPoints = 0; // <-- moved here so it's accessible everywhere
+
 // --- DOM ELEMENTS ---
 const resultTitle = document.getElementById("resultTitle");
 const resultText = document.getElementById("resultText");
@@ -57,7 +60,7 @@ db.ref(`${gameName}/gameSummary`).once("value").then(async snapshot => {
   const prevPoints = userSnapshot.exists() ? parseInt(userSnapshot.val().points || 0) : 0;
 
   // --- Calculate total ---
-  const totalPoints = prevPoints + userPoints;
+  totalPoints = prevPoints + userPoints; // <-- assign to global variable
 
   // --- Update Firebase points ---
   await userRef.update({ points: totalPoints });
@@ -91,7 +94,7 @@ function loadPrizes() {
         card.dataset.title = prize.title;
         card.dataset.points = prize.points;
 
-        const canAfford = totalPoints >= prize.points;
+        const canAfford = totalPoints >= prize.points; // <-- global variable
 
         card.innerHTML = `
           <div class="prize-emoji">${prize.emoji}</div>
