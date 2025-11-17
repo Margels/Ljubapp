@@ -11,7 +11,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-
 document.addEventListener("DOMContentLoaded", async () => {
   const container = document.querySelector(".oracle-container");
 
@@ -52,9 +51,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  renderPage(container, question, userPoints, currentIndex);
+  // Pass username to renderPage
+  renderPage(container, question, userPoints, currentIndex, username);
 });
-
 
 // ---------------------------------------------------
 // EMPTY STATE
@@ -66,12 +65,10 @@ function showEmpty(container) {
   `;
 }
 
-
-
 // ---------------------------------------------------
 // MAIN PAGE
 // ---------------------------------------------------
-function renderPage(container, questionObj, points, index) {
+function renderPage(container, questionObj, points, index, username) {
   container.innerHTML = `
     <h1>Have you been paying attention? 👂🏻</h1>
 
@@ -122,17 +119,18 @@ function renderPage(container, questionObj, points, index) {
   submitButton.addEventListener("click", async () => {
     try {
       if (!selected) return;
-  
+
       const correct = questionObj.answers.correct;
       const close = questionObj.answers.close;
-  
+
       let winner = "";
       let maxPoints = 0;
-  
+
       const martinaRef = db.ref("users/Martina/points");
       const martinaPointsSnap = await martinaRef.once("value");
       let martinaPoints = martinaPointsSnap.val() ?? 0;
-  
+
+      // Determine result
       if (selected === correct) {
         winner = "Renato";
         maxPoints = 5;
@@ -147,19 +145,24 @@ function renderPage(container, questionObj, points, index) {
         maxPoints = 5;
         martinaPoints += 5;
       }
-  
+
+      // Save game summary inside current question
       await db.ref(`oracle-game/questions/${index}/gameSummary`).set({
         winner,
         maxPoints
       });
-  
+
+      // Update Martina points
       await martinaRef.set(martinaPoints);
-  
+
+      // Move to next question
       await db.ref("oracle-game/questions/currentIndex").set(index + 1);
-  
+
+      // Save selected answer and current question for result page
       localStorage.setItem("oracle-answer-picked", selected);
       localStorage.setItem("currentGame", `oracle-game/questions/${index}`);
-  
+
+      // Redirect
       window.location.href = "../result/result.html";
     } catch (err) {
       console.error("Error in submit button:", err);
