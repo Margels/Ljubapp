@@ -120,53 +120,53 @@ function renderPage(container, questionObj, points, index) {
   // SUBMIT logic with Firebase writes
   // ---------------------------------------------------
   submitButton.addEventListener("click", async () => {
-  try {
-    if (!selected) return;
-
-    const correct = questionObj.answers.correct;
-    const close = questionObj.answers.close;
-
-    let winner = "";
-    let maxPoints = 0;
-
-    const martinaRef = db.ref("users/Martina/points");
-    const martinaPointsSnap = await martinaRef.once("value");
-    let martinaPoints = martinaPointsSnap.val() ?? 0;
-
-    if (selected === correct) {
-      winner = "Renato";
-      maxPoints = 5;
-      if (username === "Renato") localStorage.setItem("userPoints", 5);
-    } else if (selected === close) {
-      winner = "Both";
-      maxPoints = 2;
-      martinaPoints += 2;
-      if (username === "Renato") localStorage.setItem("userPoints", 2);
-    } else {
-      winner = "Martina";
-      maxPoints = 5;
-      martinaPoints += 5;
+    try {
+      if (!selected) return;
+  
+      const correct = questionObj.answers.correct;
+      const close = questionObj.answers.close;
+  
+      let winner = "";
+      let maxPoints = 0;
+  
+      const martinaRef = db.ref("users/Martina/points");
+      const martinaPointsSnap = await martinaRef.once("value");
+      let martinaPoints = martinaPointsSnap.val() ?? 0;
+  
+      if (selected === correct) {
+        winner = "Renato";
+        maxPoints = 5;
+        if (username === "Renato") localStorage.setItem("userPoints", 5);
+      } else if (selected === close) {
+        winner = "Both";
+        maxPoints = 2;
+        martinaPoints += 2;
+        if (username === "Renato") localStorage.setItem("userPoints", 2);
+      } else {
+        winner = "Martina";
+        maxPoints = 5;
+        martinaPoints += 5;
+      }
+  
+      await db.ref(`oracle-game/questions/${index}/gameSummary`).set({
+        winner,
+        maxPoints
+      });
+  
+      await martinaRef.set(martinaPoints);
+  
+      await db.ref("oracle-game/questions/currentIndex").set(index + 1);
+  
+      localStorage.setItem("oracle-answer-picked", selected);
+      localStorage.setItem("currentGame", `oracle-game/questions/${index}`);
+  
+      window.location.href = "../result/result.html";
+    } catch (err) {
+      console.error("Error in submit button:", err);
+      alert("Something went wrong. Check console.");
     }
-
-    await db.ref(`oracle-game/questions/${index}/gameSummary`).set({
-      winner,
-      maxPoints
-    });
-
-    await martinaRef.set(martinaPoints);
-
-    await db.ref("oracle-game/questions/currentIndex").set(index + 1);
-
-    localStorage.setItem("oracle-answer-picked", selected);
-    localStorage.setItem("currentGame", `oracle-game/questions/${index}`);
-
-    window.location.href = "../result/result.html";
-  } catch (err) {
-    console.error("Error in submit button:", err);
-    alert("Something went wrong. Check console.");
-  }
-});
-
+  });
+}
 
 // ---------------------------------------------------
 // SHUFFLE
