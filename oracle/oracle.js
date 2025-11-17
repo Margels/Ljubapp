@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const container = document.querySelector(".oracle-container");
 
   // Load username from storage
-  const username = localStorage.getItem("username");
+  const username = localStorage.getItem("playerName");
   if (!username) {
     container.innerHTML = `<h1>Error</h1><p>No username found.</p>`;
     return;
