@@ -146,6 +146,23 @@ function renderPage(container, questionObj, points, index, username, unlockTime)
   // Submit click
   submitButton.addEventListener("click", async () => {
     if (!selected) return;
+
+    // 1. Reset userPoints immediately to avoid double submissions
+    localStorage.setItem("userPoints", "0");
+
+    // 2. Check that Firebase currentIndex matches this question index
+    const currentIndexSnap = await db.ref("oracle-game/questions/currentIndex").once("value");
+    const currentIndex = currentIndexSnap.val();
+
+    if (currentIndex !== index) {
+        console.warn("Double submission blocked: index mismatch");
+
+        // Optional: redirect to correct question
+        window.location.href = "../game/game.html";
+        return;
+    }
+
+    // --- Continue with normal processing below ---
     await processAnswer(selected, questionObj, index, username);
   });
 }
