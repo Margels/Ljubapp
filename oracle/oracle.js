@@ -179,6 +179,7 @@ async function processAnswer(selected, questionObj, index, username) {
       winner = "Martina";
       maxPoints = 5;
       martinaPoints += 5;
+      if (username === "Renato") localStorage.setItem("userPoints", "0");
     }
 
     await db.ref(`oracle-game/questions/${index}/gameSummary`).set({
