@@ -86,3 +86,26 @@ button:hover:not(:disabled) {
   transform: scale(1.05);
 }
 
+/* HINT LISTS (Martina view) */
+.hint-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+  text-align: left;
+}
+
+.hint-list li {
+  background: rgba(255, 255, 255, 0.18);
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin: 10px 0;
+  font-size: 1.05rem;
+  line-height: 1.5;
+  backdrop-filter: blur(4px);
+  transition: transform 0.15s ease, background 0.2s ease;
+}
+
+.hint-list li:hover {
+  transform: translateX(4px);
+  background: rgba(255, 255, 255, 0.28);
+}
