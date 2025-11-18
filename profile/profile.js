@@ -60,7 +60,7 @@ userRef.once("value").then(snapshot => {
   // --- POINTS ---
   const points = userData?.points ?? 0;
   totalPoints.textContent = `🎯 Total points: ${points}`;
-  localStorage.setItem("userPoints", points); // keep in sync with localStorage just in case
+  localStorage.setItem("totalPoints", points); // keep in sync with localStorage just in case
 
   // --- PRIZES ---
   const prizes = userData?.prizesCollected || {};
