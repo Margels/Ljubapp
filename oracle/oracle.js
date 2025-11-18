@@ -14,18 +14,15 @@ const db = firebase.database();
 document.addEventListener("DOMContentLoaded", async () => {
   const container = document.querySelector(".oracle-container");
 
-  // Load username
   const username = localStorage.getItem("playerName");
   if (!username) {
     container.innerHTML = `<h1>Error</h1><p>No username found.</p>`;
     return;
   }
 
-  // Load user points
   const userSnapshot = await db.ref(`users/${username}/points`).once("value");
   const userPoints = userSnapshot.val() ?? 0;
 
-  // Load oracle data
   const snapshot = await db.ref("oracle-game/questions").once("value");
   const data = snapshot.val();
 
@@ -51,8 +48,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // Pass username to renderPage
-  renderPage(container, question, userPoints, currentIndex, username);
+  // Check 2h timeout BEFORE rendering
+  const twoHoursMs = 2 * 60 * 60 * 1000;
+  const elapsed = now - unlockTime;
+
+  if (elapsed >= twoHoursMs) {
+    // Auto-submit with “No answer”
+    await processAnswer("No answer", question, currentIndex, username);
+    return;
+  }
+
+  renderPage(container, question, userPoints, currentIndex, username, unlockTime);
 });
 
 // ---------------------------------------------------
@@ -61,26 +67,48 @@ document.addEventListener("DOMContentLoaded", async () => {
 function showEmpty(container) {
   container.innerHTML = `
     <h1>No questions for you yet 💭</h1>
-    <p class="description">Come back later for more future-predicting activities.</p>
+    <p class="description">Come back later for more activities.</p>
   `;
+}
+
+// ---------------------------------------------------
+// TIME LEFT FORMATTER
+// ---------------------------------------------------
+function formatTimeLeft(msLeft) {
+  if (msLeft <= 0) return "0m";
+
+  const minutes = Math.floor(msLeft / 60000);
+  const hours = Math.floor(minutes / 60);
+  const remainingMin = minutes % 60;
+
+  if (hours > 0) return `${hours}h${remainingMin}m`;
+  return `${remainingMin}m`;
 }
 
 // ---------------------------------------------------
 // MAIN PAGE
 // ---------------------------------------------------
-function renderPage(container, questionObj, points, index, username) {
+function renderPage(container, questionObj, points, index, username, unlockTime) {
+  
+  const now = new Date();
+  const twoHoursMs = 2 * 60 * 60 * 1000;
+  const msLeft = twoHoursMs - (now - unlockTime);
+  const timeLeftStr = formatTimeLeft(msLeft);
+
   container.innerHTML = `
     <h1>Have you been paying attention? 👂🏻</h1>
 
     <p class="description">
-      Listen and watch carefully: <strong>your opponent has been dropping hints about what will happen next</strong>! 
-      Use this information to answer the question below and win 5 points 🔮 <br><br>
-      Careful: some hints might be lies! If you're wrong, your opponent earns 5 points. <br><br>
-      If you choose the close answer, both of you earn <strong>2 points</strong>. <br><br>
+      Listen carefully: <strong>your opponent has been dropping hints about what will come next</strong>! 🔮 <br><br>
+      Gather enough information to answer the question below. You will have to choose among 4 options: <br>
+      - one is the correct answer; it will win you 5 points. <br>
+      - one is close to correct; this will win 2 points for both. <br>
+      - the two remaining options are wrong; they'll earn 5 points. <br><br>
+      Beware: some hints are lies to mislead and deceive you! <br><br> 
       Good luck, Oracle!
     </p>
 
-    <h2 id="pointsLabel">Points: <span id="pointsValue">${points}</span></h2>
+    <h2 id="pointsLabel">⏳ Time left: <span id="pointsValue">${timeLeftStr}</span></h2>
 
     <h2 style="margin-top: 2rem; font-size: 1.6rem;">${questionObj.question}</h2>
 
@@ -95,6 +123,7 @@ function renderPage(container, questionObj, points, index, username) {
   const shuffled = shuffleArray(questionObj.answers.options);
   let selected = null;
 
+  // Render answers
   shuffled.forEach(answer => {
     const div = document.createElement("div");
     div.className = "answer-tile";
@@ -113,62 +142,60 @@ function renderPage(container, questionObj, points, index, username) {
     optionsContainer.appendChild(div);
   });
 
-  // ---------------------------------------------------
-  // SUBMIT logic with Firebase writes
-  // ---------------------------------------------------
+  // Submit click
   submitButton.addEventListener("click", async () => {
-    try {
-      if (!selected) return;
-
-      const correct = questionObj.answers.correct;
-      const close = questionObj.answers.close;
-
-      let winner = "";
-      let maxPoints = 0;
-
-      const martinaRef = db.ref("users/Martina/points");
-      const martinaPointsSnap = await martinaRef.once("value");
-      let martinaPoints = martinaPointsSnap.val() ?? 0;
-
-      // Determine result
-      if (selected === correct) {
-        winner = "Renato";
-        maxPoints = 5;
-        if (username === "Renato") localStorage.setItem("userPoints", 5);
-      } else if (selected === close) {
-        winner = "Both";
-        maxPoints = 2;
-        martinaPoints += 2;
-        if (username === "Renato") localStorage.setItem("userPoints", 2);
-      } else {
-        winner = "Martina";
-        maxPoints = 5;
-        martinaPoints += 5;
-      }
-
-      // Save game summary inside current question
-      await db.ref(`oracle-game/questions/${index}/gameSummary`).set({
-        winner,
-        maxPoints
-      });
-
-      // Update Martina points
-      await martinaRef.set(martinaPoints);
-
-      // Move to next question
-      await db.ref("oracle-game/questions/currentIndex").set(index + 1);
-
-      // Save selected answer and current question for result page
-      localStorage.setItem("oracle-answer-picked", selected);
-      localStorage.setItem("currentGame", `oracle-game/questions/${index}`);
-
-      // Redirect
-      window.location.href = "../result/result.html";
-    } catch (err) {
-      console.error("Error in submit button:", err);
-      alert("Something went wrong. Check console.");
-    }
+    if (!selected) return;
+    await processAnswer(selected, questionObj, index, username);
   });
+}
+
+// ---------------------------------------------------
+// SHARED SUBMIT LOGIC
+// ---------------------------------------------------
+async function processAnswer(selected, questionObj, index, username) {
+  try {
+    const correct = questionObj.answers.correct;
+    const close = questionObj.answers.close;
+
+    let winner = "";
+    let maxPoints = 0;
+
+    const martinaRef = db.ref("users/Martina/points");
+    const martinaPointsSnap = await martinaRef.once("value");
+    let martinaPoints = martinaPointsSnap.val() ?? 0;
+
+    // Determine winner
+    if (selected === correct) {
+      winner = "Renato";
+      maxPoints = 5;
+      if (username === "Renato") localStorage.setItem("userPoints", "5");
+    } else if (selected === close) {
+      winner = "Both";
+      maxPoints = 2;
+      martinaPoints += 2;
+      if (username === "Renato") localStorage.setItem("userPoints", "2");
+    } else {
+      winner = "Martina";
+      maxPoints = 5;
+      martinaPoints += 5;
+    }
+
+    await db.ref(`oracle-game/questions/${index}/gameSummary`).set({
+      winner,
+      maxPoints
+    });
+
+    await martinaRef.set(martinaPoints);
+
+    await db.ref("oracle-game/questions/currentIndex").set(index + 1);
+
+    localStorage.setItem("oracle-answer-picked", selected);
+    localStorage.setItem("currentGame", `oracle-game/questions/${index}`);
+
+    window.location.href = "../result/result.html";
+  } catch (err) {
+    console.error("Auto-submit error:", err);
+  }
 }
 
 // ---------------------------------------------------
