@@ -158,7 +158,7 @@ function renderPage(container, questionObj, points, index, username, unlockTime)
         console.warn("Double submission blocked: index mismatch");
 
         // Optional: redirect to correct question
-        window.location.href = "../game/game.html";
+        window.location.href = "../profile/profile.html";
         return;
     }
 
