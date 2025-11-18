@@ -35,30 +35,36 @@ document.addEventListener("DOMContentLoaded", async () => {
   let currentIndex = data.currentIndex;
   const question = data[currentIndex];
 
+  // If Martina → always show hints, skip all timing logic
+  if (username === "Martina") {
+    renderPage(container, question, userPoints, currentIndex, username, new Date());
+    return;
+  }
+  
   if (!question || !question.timestamp) {
     showEmpty(container);
     return;
   }
-
+  
   const now = new Date();
   const unlockTime = new Date(question.timestamp);
   const answered = question.answerData?.answered === true;
-
+  
   if (answered || now < unlockTime) {
     showEmpty(container);
     return;
   }
-
+  
   // Check 2h timeout BEFORE rendering
   const twoHoursMs = 2 * 60 * 60 * 1000;
   const elapsed = now - unlockTime;
-
+  
   if (elapsed >= twoHoursMs) {
     // Auto-submit with “No answer”
     await processAnswer("No answer", question, currentIndex, username);
     return;
   }
-
+  
   renderPage(container, question, userPoints, currentIndex, username, unlockTime);
 });
 
