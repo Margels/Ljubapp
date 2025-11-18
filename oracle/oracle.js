@@ -91,6 +91,34 @@ function formatTimeLeft(msLeft) {
 // ---------------------------------------------------
 function renderPage(container, questionObj, points, index, username, unlockTime) {
   
+  // SPECIAL MODE: OWNER VIEW
+  if (username === "Martina") {
+    // Pick 3 random hints
+    const randomHints = shuffleArray(questionObj.hints).slice(0, 3);
+    const randomMisleading = shuffleArray(questionObj.misleadingHints).slice(0, 3);
+
+    container.innerHTML = `
+      <h1>Help your opponents guess the answer! 🪄</h1>
+
+      <p class="description" style="margin-bottom: 2rem;">
+        Here are some helpful hints and a few misleading ones... use them wisely!
+      </p>
+
+      <h2>🔍 Real Hints</h2>
+      <ul class="hint-list">
+        ${randomHints.map(h => `<li>${h}</li>`).join("")}
+      </ul>
+
+      <h2 style="margin-top: 2rem;">❌ Misleading Hints</h2>
+      <ul class="hint-list">
+        ${randomMisleading.map(h => `<li>${h}</li>`).join("")}
+      </ul>
+    `;
+
+    return;
+  }
+
+  // Original player view
   const now = new Date();
   const twoHoursMs = 2 * 60 * 60 * 1000;
   const msLeft = twoHoursMs - (now - unlockTime);
@@ -124,7 +152,6 @@ function renderPage(container, questionObj, points, index, username, unlockTime)
   const shuffled = shuffleArray(questionObj.answers.options);
   let selected = null;
 
-  // Render answers
   shuffled.forEach(answer => {
     const div = document.createElement("div");
     div.className = "answer-tile";
@@ -143,26 +170,23 @@ function renderPage(container, questionObj, points, index, username, unlockTime)
     optionsContainer.appendChild(div);
   });
 
-  // Submit click
   submitButton.addEventListener("click", async () => {
     if (!selected) return;
 
-    // 1. Reset userPoints immediately to avoid double submissions
+    // Reset userPoints to prevent double submission
     localStorage.setItem("userPoints", "0");
 
-    // 2. Check that Firebase currentIndex matches this question index
+    // Prevent double submission by checking Firebase
     const currentIndexSnap = await db.ref("oracle-game/questions/currentIndex").once("value");
     const currentIndex = currentIndexSnap.val();
 
     if (currentIndex !== index) {
-        console.warn("Double submission blocked: index mismatch");
-
-        // Optional: redirect to correct question
-        window.location.href = "../profile/profile.html";
-        return;
+      console.warn("Double submission blocked: index mismatch");
+      window.location.href = "../profile/profile.html";
+      return;
     }
 
-    // --- Continue with normal processing below ---
+    // Normal flow
     await processAnswer(selected, questionObj, index, username);
   });
 }
