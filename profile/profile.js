@@ -11,7 +11,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// --- AUTO-REDIRECT AFTER INACTIVITY (safe version) ---
+// --- AUTO-REDIRECT AFTER INACTIVITY ---
 (function setupIdleRedirect() {
   let idleTimer;
 
@@ -64,7 +64,7 @@ userRef.once("value").then(snapshot => {
   const prizes = userData?.prizesCollected || {};
   const prizeArray = Object.keys(prizes).map(id => ({ id, ...prizes[id] }));
 
-  // CLEAR old contents (prevents only one tile appearing!)
+  // Clear container so all prizes display
   prizeHistory.innerHTML = "";
 
   if (prizeArray.length === 0) {
@@ -77,13 +77,14 @@ userRef.once("value").then(snapshot => {
 
   prizeArray.forEach(prize => {
     const tile = renderPrizeTile(prize);
+
     if (prize.status === "claimed" && prize.duration) {
       updateTileTimer(tile, prize);
     }
   });
 });
 
-// --- RENDER TILE FUNCTION ---
+// --- RENDER TILE ---
 function renderPrizeTile(prize) {
   const tile = document.createElement("div");
   tile.className = "prize-tile";
@@ -94,7 +95,7 @@ function renderPrizeTile(prize) {
   let rightContent = "";
   let isExpired = false;
 
-  // ----- EXPIRY CALCULATION -----
+  // ----- EXPIRY -----
   if (claimedAt && (duration.minutes || duration.hours || duration.days)) {
     const now = new Date();
     let expiry;
@@ -148,7 +149,7 @@ function renderPrizeTile(prize) {
     <div class="tile-right">${rightContent}</div>
   `;
 
-  // CLAIM BUTTON
+  // ----- CLAIM BUTTON -----
   if (prize.status !== "claimed" && !isExpired) {
     const claimBtn = document.createElement("button");
     claimBtn.className = "claim-btn";
@@ -157,7 +158,9 @@ function renderPrizeTile(prize) {
     tile.appendChild(claimBtn);
   }
 
+  // Append tile HERE
   prizeHistory.appendChild(tile);
+
   return tile;
 }
 
@@ -191,7 +194,7 @@ function handleClaim(prize, tile, claimBtn) {
   claimBtn.remove();
 }
 
-// --- COUNTDOWN TIMER ---
+// --- UPDATE COUNTDOWN ---
 function updateTileTimer(tile, prize) {
   const rightElement = tile.querySelector(".tile-right");
   if (!prize.claimedAt || !prize.duration) return;
