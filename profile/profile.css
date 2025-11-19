@@ -81,9 +81,8 @@ body {
   margin-bottom: 1rem;
   color: white;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
+  justify-content: space-between;
+  align-items: center;
   box-sizing: border-box;
   transition: all 0.3s ease;
 }
