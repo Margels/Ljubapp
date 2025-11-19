@@ -41,8 +41,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     container.innerHTML = `
       <h1>It's been fun playing with you! 🎉</h1>
       <p class="description">
-        Our fun times have come to an end. Thank you for being such a great player!
-        There are no more games left to play, but we hope you enjoyed the journey.
+        Unfortunately, our fun times have come to an end. But hopefully, you enjoyed the journey! Thank you for being such a great player!
       </p>
     `;
     return; // stop all further logic
