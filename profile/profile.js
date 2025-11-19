@@ -73,7 +73,11 @@ userRef.once("value").then(snapshot => {
   }
 
   // Sort newest first
-  prizeArray.sort((a, b) => new Date(b.claimedAt || 0) - new Date(a.claimedAt || 0));
+  prizeArray.sort((a, b) => {
+    const aTime = a.claimedAt ? new Date(a.claimedAt).getTime() : Infinity;
+    const bTime = b.claimedAt ? new Date(b.claimedAt).getTime() : Infinity;
+    return bTime - aTime; // newest claimed first, then unclaimed
+  });
 
   prizeArray.forEach(prize => {
     const tile = renderPrizeTile(prize);
