@@ -33,6 +33,21 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   let currentIndex = data.currentIndex;
+
+  // -----------------------------
+  // END-OF-GAME CHECK
+  // -----------------------------
+  if (currentIndex > 11) {
+    container.innerHTML = `
+      <h1>It's been fun playing with you! 🎉</h1>
+      <p class="description">
+        Our fun times have come to an end. Thank you for being such a great player!
+        There are no more games left to play, but we hope you enjoyed the journey.
+      </p>
+    `;
+    return; // stop all further logic
+  }
+
   const question = data[currentIndex];
 
   // If Martina → always show hints, skip all timing logic
@@ -40,33 +55,34 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderPage(container, question, userPoints, currentIndex, username, new Date());
     return;
   }
-  
+
   if (!question || !question.timestamp) {
     showEmpty(container);
     return;
   }
-  
+
   const now = new Date();
   const unlockTime = new Date(question.timestamp);
   const answered = question.answerData?.answered === true;
-  
+
   if (answered || now < unlockTime) {
     showEmpty(container);
     return;
   }
-  
+
   // Check 2h timeout BEFORE rendering
   const twoHoursMs = 2 * 60 * 60 * 1000;
   const elapsed = now - unlockTime;
-  
+
   if (elapsed >= twoHoursMs) {
     // Auto-submit with “No answer”
     await processAnswer("No answer", question, currentIndex, username);
     return;
   }
-  
+
   renderPage(container, question, userPoints, currentIndex, username, unlockTime);
 });
+
 
 // ---------------------------------------------------
 // EMPTY STATE
