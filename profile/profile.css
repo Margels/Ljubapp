@@ -20,7 +20,7 @@ body {
 #profileImage {
   width: 180px;
   height: auto;
-  border-radius: 0; /* no circle */
+  border-radius: 0;
   margin-bottom: 1.5rem;
 }
 
@@ -32,7 +32,7 @@ body {
 
 #totalPoints {
   font-size: 1.1rem;
-  font-weight: 500; /* medium/semibold look */
+  font-weight: 500;
   margin-bottom: 2rem;
 }
 
@@ -81,8 +81,9 @@ body {
   margin-bottom: 1rem;
   color: white;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
   box-sizing: border-box;
   transition: all 0.3s ease;
 }
