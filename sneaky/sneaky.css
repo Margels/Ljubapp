@@ -29,7 +29,10 @@ button:hover {
 }
 
 input[type="file"] {
-  display: none;
+  opacity: 0;
+  position: absolute;
+  width: 1px;
+  height: 1px;
 }
 
 .upload-label {
