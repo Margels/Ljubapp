@@ -180,7 +180,8 @@
     function showNavigation() {
       const player = localStorage.getItem('playerName') || 'Player';
       const now = new Date();
-      const quizUnlockDate = new Date('2025-11-11T13:00:00'); // TODO: - Change to 27 Nov 2025, 3pm
+      const oracleGameUnlockDate = new Date('2025-11-11T13:00:00'); // TODO: - Change to 26 Nov 2025, 5pm
+      const sneakyGameUnlockDate = new Date('2025-11-11T13:00:00'); // TODO: - Change to 27 Nov 2025, 10am
     
       content.innerHTML = `
         <img src="assets/ljubapp-logo-small.png" alt="Ljubapp Logo" class="logo" />
@@ -199,9 +200,16 @@
           <span class="arrow">➔</span>
         </a>
     
-        ${now >= quizUnlockDate ? `
+        ${now >= oracleGameUnlockDate ? `
         <a href="oracle/oracle.html" class="tile">
           <span>Oracle Game</span>
+          <span class="arrow">➔</span>
+        </a>
+        ` : ''}
+    
+        ${now >= sneakyGameUnlockDate ? `
+        <a href="sneaky/sneaky.html" class="tile">
+          <span>Sneaky game</span>
           <span class="arrow">➔</span>
         </a>
         ` : ''}
