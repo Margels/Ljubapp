@@ -85,23 +85,17 @@ async function validatePhoto(file) {
   if (!model) return false;
 
   const faces = await model.estimateFaces(img);
-  if (!faces || faces.length !== 1) return false;
+  if (!faces || faces.length !== 1) return false; // must be exactly one face
 
   const face = faces[0];
 
-  const leftEye = face.keypoints.find(k => k.name === "left_eye");
-  const rightEye = face.keypoints.find(k => k.name === "right_eye");
+  // Reject if face is tiny (too far away)
+  const box = face.box;
+  const faceArea = box.width * box.height;
+  const imgArea = img.width * img.height;
+  if (faceArea / imgArea < 0.01) return false;
 
-  if (!leftEye || !rightEye) return false;
-
-  const dx = rightEye.x - leftEye.x;
-  const dy = rightEye.y - leftEye.y;
-  const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-
-  // More permissive angle rules
-  if (Math.abs(angle) < 6) return false;   // looking straight
-  if (Math.abs(angle) > 75) return false;  // too sideways
-
+  // Everything else is OK
   return true;
 }
 
