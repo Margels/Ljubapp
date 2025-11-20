@@ -33,7 +33,8 @@ container.appendChild(fileInput);
 const uploadLabel = document.createElement("label");
 uploadLabel.textContent = "Upload +";
 uploadLabel.className = "upload-label";
-uploadLabel.htmlFor = fileInput.id = "fileInput";
+fileInput.id = "fileInput";
+uploadLabel.onclick = () => fileInput.click();
 container.appendChild(uploadLabel);
 
 // Results placeholder
