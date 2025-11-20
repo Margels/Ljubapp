@@ -85,17 +85,36 @@ async function validatePhoto(file) {
   if (!model) return false;
 
   const faces = await model.estimateFaces(img);
-  if (!faces || faces.length !== 1) return false; // must be exactly one face
+  if (!faces || faces.length !== 1) return false;
 
   const face = faces[0];
+  const keypoints = face.keypoints;
 
-  // Reject if face is tiny (too far away)
+  const leftEye = keypoints.find(k => k.name === "left_eye");
+  const rightEye = keypoints.find(k => k.name === "right_eye");
+  const nose = keypoints.find(k => k.name === "nose_tip");
+
+  if (!leftEye || !rightEye || !nose) return false;
+
+  // Midpoint between eyes
+  const eyeMidX = (leftEye.x + rightEye.x) / 2;
+  const eyeMidY = (leftEye.y + rightEye.y) / 2;
+
+  // Distance from nose to eye midpoint
+  const dx = nose.x - eyeMidX;
+  const dy = nose.y - eyeMidY;
+
+  const distance = Math.sqrt(dx*dx + dy*dy);
+
+  // Heuristic: if nose too close to eye midpoint → frontal
+  if (distance < 8) return false;  // <-- adjust threshold to taste
+
+  // Optional: reject tiny faces
   const box = face.box;
   const faceArea = box.width * box.height;
   const imgArea = img.width * img.height;
   if (faceArea / imgArea < 0.01) return false;
 
-  // Everything else is OK
   return true;
 }
 
