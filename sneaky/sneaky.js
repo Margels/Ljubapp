@@ -90,25 +90,22 @@ async function validatePhoto(file) {
   const face = faces[0];
   const keypoints = face.keypoints;
 
-  // Ensure essential landmarks exist
   const leftEye = keypoints.find(k => k.name === "left_eye");
   const rightEye = keypoints.find(k => k.name === "right_eye");
-  const nose = keypoints.find(k => k.name === "nose_tip");
 
-  if (!leftEye || !rightEye || !nose) return false;
+  if (!leftEye || !rightEye) return false;
 
-  // Face must be reasonably big in the image
+  // Face bounding box check
   const box = face.box;
-  const faceArea = box.width * box.height;
-  const imgArea = img.width * img.height;
-  if (faceArea / imgArea < 0.02) return false; // too small
+  if (!box || box.width * box.height / (img.width * img.height) < 0.02) return false;
 
-  // Eyes horizontal difference → reject perfectly frontal
-  const eyeDx = Math.abs(leftEye.x - rightEye.x);
-  const eyeDy = Math.abs(leftEye.y - rightEye.y);
-  const angle = Math.atan2(eyeDy, eyeDx) * 180 / Math.PI;
+  // Eyes vertical offset check: side profile has nonzero dy/dx
+  const dx = Math.abs(rightEye.x - leftEye.x);
+  const dy = Math.abs(rightEye.y - leftEye.y);
 
-  if (angle < 5) return false; // too frontal
+  const ratio = dy / dx; // small ~0 for frontal, larger for side
+  if (ratio < 0.05) return false; // reject almost perfectly horizontal (frontal)
+  if (ratio > 0.5) return false;  // reject extreme diagonal (weird)
 
   return true; // valid sneaky photo
 }
