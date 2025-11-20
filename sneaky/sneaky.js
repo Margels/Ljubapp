@@ -90,32 +90,27 @@ async function validatePhoto(file) {
   const face = faces[0];
   const keypoints = face.keypoints;
 
+  // Ensure essential landmarks exist
   const leftEye = keypoints.find(k => k.name === "left_eye");
   const rightEye = keypoints.find(k => k.name === "right_eye");
   const nose = keypoints.find(k => k.name === "nose_tip");
 
   if (!leftEye || !rightEye || !nose) return false;
 
-  // Midpoint between eyes
-  const eyeMidX = (leftEye.x + rightEye.x) / 2;
-  const eyeMidY = (leftEye.y + rightEye.y) / 2;
-
-  // Distance from nose to eye midpoint
-  const dx = nose.x - eyeMidX;
-  const dy = nose.y - eyeMidY;
-
-  const distance = Math.sqrt(dx*dx + dy*dy);
-
-  // Heuristic: if nose too close to eye midpoint → frontal
-  if (distance < 8) return false;  // <-- adjust threshold to taste
-
-  // Optional: reject tiny faces
+  // Face must be reasonably big in the image
   const box = face.box;
   const faceArea = box.width * box.height;
   const imgArea = img.width * img.height;
-  if (faceArea / imgArea < 0.01) return false;
+  if (faceArea / imgArea < 0.02) return false; // too small
 
-  return true;
+  // Eyes horizontal difference → reject perfectly frontal
+  const eyeDx = Math.abs(leftEye.x - rightEye.x);
+  const eyeDy = Math.abs(leftEye.y - rightEye.y);
+  const angle = Math.atan2(eyeDy, eyeDx) * 180 / Math.PI;
+
+  if (angle < 5) return false; // too frontal
+
+  return true; // valid sneaky photo
 }
 
 // --- Handle uploads ---
