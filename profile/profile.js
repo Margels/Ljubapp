@@ -11,19 +11,17 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// --- AUTO-REDIRECT AFTER INACTIVITY (safe version) ---
+// --- AUTO-REDIRECT AFTER INACTIVITY ---
 (function setupIdleRedirect() {
   let idleTimer;
 
   function resetTimer() {
     clearTimeout(idleTimer);
     idleTimer = setTimeout(() => {
-      // redirect one level up to navigation.html
       window.location.replace("../navigation.html");
-    }, 30000); // 30 seconds
+    }, 30000);
   }
 
-  // Register activity listeners
   window.addEventListener("load", resetTimer);
   document.addEventListener("mousemove", resetTimer);
   document.addEventListener("touchstart", resetTimer);
@@ -43,9 +41,9 @@ const prizeHistory = document.getElementById("prizeHistory");
 profileImage.src = `../assets/${username.toLowerCase()}.png`;
 profileName.textContent = username;
 totalPoints.textContent = "🎯 Total points: ...";
-localStorage.removeItem("currentGame")
+localStorage.removeItem("currentGame");
 
-// --- DISABLE BACK NAVIGATION UNIVERSALLY ---
+// --- DISABLE BACK NAVIGATION ---
 window.history.pushState(null, null, window.location.href);
 window.addEventListener("popstate", function () {
   window.history.pushState(null, null, window.location.href);
@@ -60,11 +58,14 @@ userRef.once("value").then(snapshot => {
   // --- POINTS ---
   const points = userData?.points ?? 0;
   totalPoints.textContent = `🎯 Total points: ${points}`;
-  localStorage.setItem("userPoints", points); // keep in sync with localStorage just in case
+  localStorage.setItem("totalPoints", points);
 
   // --- PRIZES ---
   const prizes = userData?.prizesCollected || {};
   const prizeArray = Object.keys(prizes).map(id => ({ id, ...prizes[id] }));
+
+  // Clear container so all prizes display
+  prizeHistory.innerHTML = "";
 
   if (prizeArray.length === 0) {
     prizeHistory.innerHTML = `<p style="opacity:0.7;">No prizes collected yet.</p>`;
@@ -72,18 +73,22 @@ userRef.once("value").then(snapshot => {
   }
 
   // Sort newest first
-  prizeArray.sort((a, b) => new Date(b.claimedAt || 0) - new Date(a.claimedAt || 0));
-
-  prizeArray.forEach(prize => {
-  const tile = renderPrizeTile(prize);
-  if (prize.status === "claimed" && prize.duration) {
-    updateTileTimer(tile, prize);
-    }  
+  prizeArray.sort((a, b) => {
+    const aTime = a.claimedAt ? new Date(a.claimedAt).getTime() : Infinity;
+    const bTime = b.claimedAt ? new Date(b.claimedAt).getTime() : Infinity;
+    return bTime - aTime; // newest claimed first, then unclaimed
   });
 
+  prizeArray.forEach(prize => {
+    const tile = renderPrizeTile(prize);
+
+    if (prize.status === "claimed" && prize.duration) {
+      updateTileTimer(tile, prize);
+    }
+  });
 });
 
-// --- RENDER TILE FUNCTION ---
+// --- RENDER TILE ---
 function renderPrizeTile(prize) {
   const tile = document.createElement("div");
   tile.className = "prize-tile";
@@ -94,7 +99,7 @@ function renderPrizeTile(prize) {
   let rightContent = "";
   let isExpired = false;
 
-  // ----- EXPIRY CALCULATION -----
+  // ----- EXPIRY -----
   if (claimedAt && (duration.minutes || duration.hours || duration.days)) {
     const now = new Date();
     let expiry;
@@ -106,7 +111,7 @@ function renderPrizeTile(prize) {
     } else if (duration.days) {
       if (duration.days === 1) {
         expiry = new Date(claimedAt);
-        expiry.setHours(23, 59, 59, 999); // until midnight
+        expiry.setHours(23, 59, 59, 999);
       } else {
         expiry = new Date(claimedAt.getTime() + duration.days * 24 * 3600000);
       }
@@ -139,7 +144,7 @@ function renderPrizeTile(prize) {
     rightContent = "Expired";
   }
 
-  // ----- TILE STRUCTURE -----
+  // ----- TILE HTML -----
   tile.innerHTML = `
     <div>
       <div class="prize-title">${prize.emoji} ${prize.title}</div>
@@ -157,11 +162,13 @@ function renderPrizeTile(prize) {
     tile.appendChild(claimBtn);
   }
 
+  // Append tile HERE
   prizeHistory.appendChild(tile);
+
   return tile;
 }
 
-// --- HANDLE CLAIM (Firebase version) ---
+// --- HANDLE CLAIM ---
 function handleClaim(prize, tile, claimBtn) {
   claimBtn.disabled = true;
   tile.classList.add("claimed");
@@ -170,7 +177,6 @@ function handleClaim(prize, tile, claimBtn) {
   prize.claimedAt = now.toISOString();
   prize.status = "claimed";
 
-  // For uses-based prizes
   if (prize.duration?.uses) {
     prize.usesLeft = (prize.usesLeft ?? prize.duration.uses) - 1;
 
@@ -181,7 +187,6 @@ function handleClaim(prize, tile, claimBtn) {
     }
   }
 
-  // Update in Firebase
   const prizeRef = db.ref(`users/${username}/prizesCollected/${prize.id}`);
   prizeRef.update({
     claimedAt: prize.claimedAt,
@@ -189,19 +194,18 @@ function handleClaim(prize, tile, claimBtn) {
     usesLeft: prize.usesLeft ?? null
   });
 
-  // Update UI text properly
   updateTileTimer(tile, prize);
   claimBtn.remove();
 }
 
-// --- Helper: updates countdown text ---
+// --- UPDATE COUNTDOWN ---
 function updateTileTimer(tile, prize) {
   const rightElement = tile.querySelector(".tile-right");
   if (!prize.claimedAt || !prize.duration) return;
 
   const claimedAt = new Date(prize.claimedAt);
   let expiry = null;
-  
+
   if (prize.duration.minutes) {
     expiry = new Date(claimedAt.getTime() + prize.duration.minutes * 60000);
   } else if (prize.duration.hours) {
@@ -209,16 +213,16 @@ function updateTileTimer(tile, prize) {
   } else if (prize.duration.days) {
     if (prize.duration.days === 1) {
       expiry = new Date(claimedAt);
-      expiry.setHours(23, 59, 59, 999); // until midnight
+      expiry.setHours(23, 59, 59, 999);
     } else {
       expiry = new Date(claimedAt.getTime() + prize.duration.days * 24 * 3600000);
     }
   }
 
-
   function refreshTimer() {
     const now = new Date();
     const diffMs = expiry - now;
+
     if (diffMs <= 0) {
       rightElement.textContent = "Expired";
       tile.style.opacity = "0.5";
@@ -228,12 +232,11 @@ function updateTileTimer(tile, prize) {
 
     const diffM = Math.floor(diffMs / 60000);
     const diffH = Math.floor(diffM / 60);
-    const display =
-      diffH > 0 ? `${diffH}h ${diffM % 60}m left` : `${diffM}m left`;
 
-    rightElement.textContent = display;
+    rightElement.textContent =
+      diffH > 0 ? `${diffH}h ${diffM % 60}m left` : `${diffM}m left`;
   }
 
   refreshTimer();
-  const interval = setInterval(refreshTimer, 60000); // update every minute
+  const interval = setInterval(refreshTimer, 60000);
 }

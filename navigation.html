@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Ljubapp - Navigation</title>
   <style>
-    /* --- BASE LAYOUT --- */
     body {
       background-color: #151259;
       color: white;
@@ -22,14 +21,12 @@
       text-align: center;
     }
 
-    /* --- LOGO --- */
     .logo {
       width: 120px;
       height: auto;
       margin-bottom: 0.5rem;
     }
 
-    /* --- DESCRIPTION --- */
     .description {
       max-width: 480px;
       font-size: 1rem;
@@ -38,7 +35,6 @@
       line-height: 1.5;
     }
 
-    /* --- TILE STYLE --- */
     .tile {
       background-color: white;
       color: #151259;
@@ -64,7 +60,6 @@
       box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
     }
 
-    /* --- ARROW STYLE --- */
     .arrow {
       font-size: 1.3rem;
       margin-left: 1rem;
@@ -82,25 +77,138 @@
       text-align: center;
       padding-top: 2rem;
     }
+
+    /* --- PLAYER SELECTION --- */
+    .player-option {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 10px;
+      background-color: rgba(255, 255, 255, 0.2);
+      padding: 12px;
+      border-radius: 12px;
+      margin: 10px 0;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: left;
+      max-width: 300px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .player-option input[type="radio"] {
+      accent-color: #151259;
+      transform: scale(1.2);
+    }
+
+    .player-option.selected {
+      background-color: white;
+      color: #151259;
+    }
+
+    button {
+      margin-top: 30px;
+      background-color: white;
+      color: #151259;
+      padding: 12px 25px;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.1s ease;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+    }
+
   </style>
 </head>
 <body>
-  <img src="assets/ljubapp-logo-small.png" alt="Ljubapp Logo" class="logo" />
+  <div id="content"></div>
 
-  <p class="description">
-    Use this page to navigate through the pages. Check back every few hours as new activities will unlock!
-  </p>
+  <script>
+    const playerName = localStorage.getItem('playerName');
+    const content = document.getElementById('content');
 
-  <a href="profile/profile.html" class="tile">
-    <span>Profile</span>
-    <span class="arrow">➔</span>
-  </a>
+    // If playerName exists → show navigation
+    if (playerName) {
+      showNavigation();
+    } else {
+      askWhoIsPlaying();
+    }
 
-  <a href="menu/menu.html" class="tile">
-    <span>Menu</span>
-    <span class="arrow">➔</span>
-  </a>
+    // --- FUNCTIONS ---
+    function askWhoIsPlaying() {
+      content.innerHTML = `
+        <div style="max-width: 500px; margin: 0 auto; text-align: center;">
+          <h2 style="margin-bottom: 10px;">Who is playing?</h2>
+          <div id="players">
+            <div class="player-option" data-player="Martina">
+              <input type="radio" name="player" id="martinaRadio">
+              <label for="martinaRadio">Martina</label>
+            </div>
+            <div class="player-option" data-player="Renato">
+              <input type="radio" name="player" id="renatoRadio">
+              <label for="renatoRadio">Renato</label>
+            </div>
+          </div>
+          <button id="continueBtn" style="display:none;">Continue ➔</button>
+        </div>
+      `;
 
-  <footer>Ljubapp © 2025</footer>
+      document.querySelectorAll('.player-option').forEach(option => {
+        option.addEventListener('click', () => {
+          document.querySelectorAll('.player-option').forEach(opt => {
+            opt.classList.remove('selected');
+            opt.querySelector('input[type="radio"]').checked = false;
+          });
+
+          option.classList.add('selected');
+          const radio = option.querySelector('input[type="radio"]');
+          radio.checked = true;
+          const selectedPlayer = option.dataset.player;
+          localStorage.setItem('playerName', selectedPlayer);
+
+          const btn = document.getElementById('continueBtn');
+          btn.style.display = 'inline-block';
+          btn.onclick = showNavigation;
+        });
+      });
+    }
+
+    function showNavigation() {
+      const player = localStorage.getItem('playerName') || 'Player';
+      const now = new Date();
+      const quizUnlockDate = new Date('2025-11-11T13:00:00'); // TODO: - Change to 27 Nov 2025, 3pm
+    
+      content.innerHTML = `
+        <img src="assets/ljubapp-logo-small.png" alt="Ljubapp Logo" class="logo" />
+        <p class="description">
+          Welcome back, <strong>${player}</strong>!<br>
+          Use this page to navigate through the experiences.
+        </p>
+    
+        <a href="profile/profile.html" class="tile">
+          <span>Profile</span>
+          <span class="arrow">➔</span>
+        </a>
+    
+        <a href="menu/menu.html" class="tile">
+          <span>Menu</span>
+          <span class="arrow">➔</span>
+        </a>
+    
+        ${now >= quizUnlockDate ? `
+        <a href="oracle/oracle.html" class="tile">
+          <span>Oracle Game</span>
+          <span class="arrow">➔</span>
+        </a>
+        ` : ''}
+    
+        <footer>Ljubapp © 2025</footer>
+      `;
+    }
+  </script>
 </body>
 </html>
