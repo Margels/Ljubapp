@@ -44,8 +44,13 @@ container.appendChild(resultsDiv);
 
 // --- Load face model ---
 let model;
-faceLandmarksDetection.load(faceLandmarksDetection.SupportedPackages.mediapipeFacemesh)
-  .then(m => model = m);
+faceLandmarksDetection
+  .load(faceLandmarksDetection.SupportedPackages.mediapipeFacemesh)
+  .then(m => {
+    model = m;
+    console.log("Face model loaded");
+  })
+  .catch(err => console.error("Model load error:", err));
 
 // --- Utility: validate photo ---
 async function validatePhoto(file) {
