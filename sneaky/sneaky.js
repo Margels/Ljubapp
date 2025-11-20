@@ -85,29 +85,36 @@ async function validatePhoto(file) {
   if (!model) return false;
 
   const faces = await model.estimateFaces(img);
+
+  // Must detect exactly one face
   if (!faces || faces.length !== 1) return false;
 
   const face = faces[0];
   const keypoints = face.keypoints;
 
+  // Must have both eyes detected
   const leftEye = keypoints.find(k => k.name === "left_eye");
   const rightEye = keypoints.find(k => k.name === "right_eye");
 
   if (!leftEye || !rightEye) return false;
 
-  // Face bounding box check
+  // Face must be at least 3% of image
   const box = face.box;
-  if (!box || box.width * box.height / (img.width * img.height) < 0.02) return false;
+  const faceAreaRatio = (box.width * box.height) / (img.width * img.height);
+  if (faceAreaRatio < 0.03) return false;
 
-  // Eyes vertical offset check: side profile has nonzero dy/dx
-  const dx = Math.abs(rightEye.x - leftEye.x);
-  const dy = Math.abs(rightEye.y - leftEye.y);
+  // Compute angle based on eye alignment
+  const dx = rightEye.x - leftEye.x;
+  const dy = rightEye.y - leftEye.y;
 
-  const ratio = dy / dx; // small ~0 for frontal, larger for side
-  if (ratio < 0.05) return false; // reject almost perfectly horizontal (frontal)
-  if (ratio > 0.5) return false;  // reject extreme diagonal (weird)
+  const angle = Math.abs(Math.atan2(dy, dx) * 180 / Math.PI);
 
-  return true; // valid sneaky photo
+  // A frontal face has angle ~0 degrees
+  // A side profile usually has 5–35 degrees
+  if (angle < 4) return false;      // TOO frontal
+  if (angle > 45) return false;     // too extreme or misdetected
+
+  return true; // Valid photo
 }
 
 // --- Handle uploads ---
