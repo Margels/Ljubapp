@@ -100,7 +100,7 @@ async function validatePhoto(file) {
 
   // More permissive angle rules
   if (Math.abs(angle) < 6) return false;   // looking straight
-  if (Math.abs(angle) > 45) return false;  // too sideways
+  if (Math.abs(angle) > 75) return false;  // too sideways
 
   return true;
 }
