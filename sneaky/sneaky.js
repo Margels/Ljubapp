@@ -20,7 +20,7 @@ title.textContent = "Sneaky peeky 📸";
 container.appendChild(title);
 
 const description = document.createElement("p");
-description.textContent = "Can you take sneaky pictures of your opponent without them realising? You have 3 hours to try and take as many as you can, but remember: in order to be valid, your enemy must be visible, but also unaware. Whoever takes the most valid photos wins 10 points!";
+description.textContent = "Can you take sneaky pictures of your opponent without them realising? <br><br> You have 3 hours to try and take as many as you can, but remember: in order to be valid, your enemy must be visible, but also unaware. Whoever takes the most valid photos wins 10 points!";
 container.appendChild(description);
 
 // Upload button
