@@ -61,23 +61,33 @@ async function validatePhoto(file) {
   img.src = URL.createObjectURL(file);
   await img.decode();
 
-  const predictions = await model.estimateFaces({input: img, returnTensors: false, flipHorizontal: false});
-  if (!predictions.length) return false; // no face detected
+  if (!model) return false;
 
-  const face = predictions[0];
-  const keypoints = face.scaledMesh;
+  const faces = await model.estimateFaces(img);
 
-  // Simple yaw check: approximate head rotation
-  const leftEye = keypoints[33]; // left eye corner
-  const rightEye = keypoints[263]; // right eye corner
-  const dx = rightEye[0] - leftEye[0];
-  const dy = rightEye[1] - leftEye[1];
-  const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+  if (!faces || !faces.length) return false;
 
-  // Acceptable if head rotated slightly (not facing exactly sideways)
-  if (Math.abs(angle) > 30) return false;
+  const face = faces[0];
 
-  return true; // valid sneaky photo
+  // Estimate head angle:
+  // MediaPipe gives boundingBox with keypoints including eyes + nose
+
+  const leftEye = face.keypoints.find(k => k.name === "left_eye");
+  const rightEye = face.keypoints.find(k => k.name === "right_eye");
+
+  if (!leftEye || !rightEye) return false;
+
+  const dx = rightEye.x - leftEye.x;
+  const dy = rightEye.y - leftEye.y;
+  const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+  // If angle too straight → looking at camera
+  if (Math.abs(angle) < 10) return false;
+
+  // If angle extreme → turned too far away
+  if (Math.abs(angle) > 35) return false;
+
+  return true;
 }
 
 // --- Handle uploads ---
