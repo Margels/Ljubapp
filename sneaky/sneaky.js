@@ -86,35 +86,16 @@ async function validatePhoto(file) {
 
   const faces = await model.estimateFaces(img);
 
-  // Must detect exactly one face
+  // Accept only if one face is detected
   if (!faces || faces.length !== 1) return false;
 
+  // Check face is large enough
   const face = faces[0];
-  const keypoints = face.keypoints;
-
-  // Must have both eyes detected
-  const leftEye = keypoints.find(k => k.name === "left_eye");
-  const rightEye = keypoints.find(k => k.name === "right_eye");
-
-  if (!leftEye || !rightEye) return false;
-
-  // Face must be at least 3% of image
   const box = face.box;
-  const faceAreaRatio = (box.width * box.height) / (img.width * img.height);
-  if (faceAreaRatio < 0.03) return false;
+  const areaRatio = (box.width * box.height) / (img.width * img.height);
+  if (areaRatio < 0.03) return false;
 
-  // Compute angle based on eye alignment
-  const dx = rightEye.x - leftEye.x;
-  const dy = rightEye.y - leftEye.y;
-
-  const angle = Math.abs(Math.atan2(dy, dx) * 180 / Math.PI);
-
-  // A frontal face has angle ~0 degrees
-  // A side profile usually has 5–35 degrees
-  if (angle < 4) return false;      // TOO frontal
-  if (angle > 45) return false;     // too extreme or misdetected
-
-  return true; // Valid photo
+  return true; // Accept all detected faces
 }
 
 // --- Handle uploads ---
