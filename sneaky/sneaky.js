@@ -74,6 +74,7 @@ async function validatePhoto(file) {
 
 // --- Handle uploads ---
 fileInput.addEventListener("change", async () => {
+  console.log("CHANGE FIRED!", fileInput.files);
   const files = Array.from(fileInput.files);
   if (!files.length) return;
 
