@@ -11,7 +11,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-const username = (localStorage.getItem("playerName") || "Player").toLowerCase();
+const username = localStorage.getItem("playerName") || "Player";
 const container = document.getElementById("game-container");
 
 // --- Page structure ---
@@ -181,7 +181,7 @@ async function redirectToResult() {
   let winnerName = "";
   let maxPoints = 0;
 
-  // 
+  // Both players participated
   if (otherPlayers.length) {
     const other = players[otherPlayers[0]];
     const otherValid = other.valid || 0;
@@ -213,6 +213,7 @@ async function redirectToResult() {
         claimedBy: [playerName]
       });
     }
+    
   // Only one player has played
   } else {
     points = 10;
@@ -224,11 +225,9 @@ async function redirectToResult() {
     });
   }
 
-  // Save locally
+  // Save locally and redirect
   localStorage.setItem("userPoints", points);
   localStorage.setItem("currentGame", "sneaky-game");
-
-  // Redirect
   window.location.href = "../result/result.html";
 }
 
