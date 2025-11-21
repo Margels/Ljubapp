@@ -8,30 +8,28 @@ const firebaseConfig = {
   messagingSenderId: "922849938749",
   appId: "1:922849938749:web:59c06714af609e478d0954"
 };
+
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// --- GLOBALS ---
-const username = (localStorage.getItem("playerName") || "Player").toLowerCase();
+const username = localStorage.getItem("playerName") || "Player";
+localStorage.setItem("userPoints", 0); // reset possible cheating
+localStorage.setItem("currentGame", "cultural-exchange");
+
 const container = document.getElementById("exchange-container");
-const GAME_PATH = "exchange-game";
-localStorage.setItem("userPoints", "0"); // prevent cheating
 
-let questionsData = [];
-
-// --- LOAD QUESTIONS JSON ---
+// --- LOAD QUESTIONS JSON FROM FIREBASE ---
 async function loadQuestions() {
-  const res = await fetch("../files/exchange.json");
-  const data = await res.json();
-  questionsData = data.questions;
+  const snap = await db.ref("exchange-game/questions").get();
+  return snap.val();
 }
 
-// --- INITIALIZE USER GAME FOLDER ---
-async function initGameFolder() {
-  const userRef = db.ref(`${GAME_PATH}/${username}`);
-  const snap = await userRef.get();
+// --- INITIALIZE USER GAME FOLDER IF NEEDED ---
+async function initializeUserGame() {
+  const userRef = db.ref(`exchange-game/${username}`);
+  const userSnap = await userRef.get();
 
-  if (!snap.exists()) {
+  if (!userSnap.exists()) {
     await userRef.set({
       timestamp: null,
       currentIndex: 0,
@@ -40,132 +38,90 @@ async function initGameFolder() {
   }
 }
 
-// --- CHECK IF GAME FINISHED FOR BOTH USERS ---
-async function evaluateGameIfFinished() {
-  const gameSummaryRef = db.ref(`${GAME_PATH}/gameSummary`);
-  const summarySnap = await gameSummaryRef.get();
+// --- CHECK GAME SUMMARY REDIRECT ---
+async function checkGameSummary() {
+  const summarySnap = await db.ref("exchange-game/gameSummary").get();
 
-  // If summary already exists → redirect based on winner
-  if (summarySnap.exists()) {
-    const { winner } = summarySnap.val();
-    localStorage.setItem("currentGame", "exchange");
-    localStorage.setItem("userPoints", winner === username ? "10" : "0");
+  if (!summarySnap.exists()) return false;
 
-    if (winner === username) {
-      window.location.href = "../result/result.html";
-    } else {
-      window.location.href = "../result/result.html";
-    }
-    return true;
-  }
+  const summary = summarySnap.val();
 
-  // Otherwise check both players
-  const martinaSnap = await db.ref(`${GAME_PATH}/martina`).get();
-  const renatoSnap = await db.ref(`${GAME_PATH}/renato`).get();
-
-  if (!martinaSnap.exists() || !renatoSnap.exists()) return false;
-
-  const M = martinaSnap.val();
-  const R = renatoSnap.val();
-
-  const lastIndex = questionsData.length - 1;
-
-  if (M.currentIndex > lastIndex && R.currentIndex > lastIndex) {
-    let winner = null;
-
-    if (M.correctAnswers > R.correctAnswers) winner = "martina";
-    else if (R.correctAnswers > M.correctAnswers) winner = "renato";
-    else {
-      // tie → timestamp
-      winner = (M.timestamp < R.timestamp) ? "martina" : "renato";
-    }
-
-    await gameSummaryRef.set({
-      winner,
-      maxPoints: winner === "martina" ? M.correctAnswers : R.correctAnswers
-    });
-
-    localStorage.setItem("currentGame", "exchange");
-    localStorage.setItem("userPoints", winner === username ? "10" : "0");
-
+  if (summary.winner === username) {
+    localStorage.setItem("userPoints", summary.maxPoints);
     window.location.href = "../result/result.html";
-    return true;
+  } else {
+    localStorage.setItem("userPoints", 0);
+    window.location.href = "../result/result.html";
   }
 
-  return false;
+  return true;
 }
 
-// --- RENDER CURRENT QUESTION ---
-async function renderQuestion() {
-  const userRef = db.ref(`${GAME_PATH}/${username}`);
-  const userData = (await userRef.get()).val();
-  const index = userData.currentIndex;
-  const q = questionsData[index];
+// --- CHECK IF BOTH USERS FINISHED AND DETERMINE WINNER ---
+async function checkEndGame() {
+  const martinaRef = db.ref("exchange-game/Martina");
+  const renatoRef = db.ref("exchange-game/Renato");
 
-  container.innerHTML = ""; // clear
+  const [mSnap, rSnap] = await Promise.all([martinaRef.get(), renatoRef.get()]);
 
-  // Title
-  const title = document.createElement("h2");
-  title.textContent = "Cultural exchange 🗺️";
-  container.appendChild(title);
+  if (!mSnap.exists() || !rSnap.exists()) return;
 
-  // Description
-  const desc = document.createElement("p");
-  desc.className = "description";
-  desc.innerHTML = `How well do you know your partner's language?<br><br>
-  Find out through this little quiz. The first to finish the quiz with the most correct answers, wins 10 points!`;
-  container.appendChild(desc);
+  const M = mSnap.val();
+  const R = rSnap.val();
 
-  // language for placeholder
-  const answerBlock = q.answers[username];
-  const languageName = answerBlock.language;
+  const Mdone = M.currentIndex > 14;
+  const Rdone = R.currentIndex > 14;
 
-  // Replace %@ placeholder
-  const questionTitle = document.createElement("h2");
-  questionTitle.textContent = q.question.replace("%@", languageName);
-  container.appendChild(questionTitle);
+  if (!Mdone || !Rdone) return; // both not finished yet
 
-  // Answers
-  let selected = null;
+  // --- Determine winner ---
+  let winner = null;
+  let maxPoints = null;
 
-  answerBlock.options.forEach(opt => {
-    const tile = document.createElement("label");
-    tile.className = "answer-tile";
-    tile.innerHTML = `
-      <input type="radio" name="answer" value="${opt}">
-      <span>${opt}</span>
-    `;
-
-    tile.addEventListener("click", () => {
-      document.querySelectorAll(".answer-tile").forEach(t => t.classList.remove("checked"));
-      tile.classList.add("checked");
-      tile.querySelector("input").checked = true;
-      selected = opt;
-    });
-
-    container.appendChild(tile);
-  });
-
-  // Button
-  const btn = document.createElement("button");
-  btn.textContent = (index === questionsData.length - 1) ? "Submit" : "Continue >";
-
-  // (You said you'll tell me later what happens on submit — so I only attach stub)
-  btn.addEventListener("click", () => {
-    if (!selected) return alert("Please choose an answer!");
-    console.log("Submit clicked");
-  });
-
-  container.appendChild(btn);
-}
-
-// --- MAIN FLOW ---
-(async function main() {
-  await loadQuestions();
-  await initGameFolder();
-
-  const finished = await evaluateGameIfFinished();
-  if (!finished) {
-    await renderQuestion();
+  if (M.correctAnswers > R.correctAnswers) {
+    winner = "Martina";
+    maxPoints = M.correctAnswers;
+  } else if (R.correctAnswers > M.correctAnswers) {
+    winner = "Renato";
+    maxPoints = R.correctAnswers;
+  } else {
+    // tie → check timestamps
+    winner = (new Date(M.timestamp) < new Date(R.timestamp)) ? "Martina" : "Renato";
+    maxPoints = winner === "Martina" ? M.correctAnswers : R.correctAnswers;
   }
+
+  // Save summary only once
+  await db.ref("exchange-game/gameSummary").set({ winner, maxPoints });
+
+  localStorage.setItem("userPoints", winner === username ? maxPoints : 0);
+  window.location.href = "../result/result.html";
+}
+
+
+
+// --- RENDER INTRO TEXT (UI COMES LATER) ---
+function renderIntro() {
+  container.innerHTML = `
+    <h2>Cultural exchange 🗺️</h2>
+    <p>
+      How well do you know your partner's language?<br><br>
+      Find out through this little quiz.<br>
+      The first to finish the quiz with the most correct answers,<br>
+      wins 10 points!
+    </p>
+  `;
+}
+
+// --- MAIN LOGIC EXECUTION ---
+(async function start() {
+  renderIntro();
+
+  await initializeUserGame();
+
+  const summaryHandled = await checkGameSummary();
+  if (summaryHandled) return;
+
+  await checkEndGame();
+
+  // No redirect means: continue to question rendering later
 })();
