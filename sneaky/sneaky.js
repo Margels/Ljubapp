@@ -33,7 +33,7 @@ timerLabel.style.fontSize = "1.2rem";
 container.appendChild(timerLabel);
 
 // 27 Nov 2025, 11:00 Italy time (UTC+1)
-const gameStart = new Date("2025-11-20T21:00:00Z").getTime(); // UTC + 2
+const gameStart = new Date("2025-11-20T22:10:00Z").getTime(); // UTC + 2
 const gameDuration = 4 * 60 * 60 * 1000; // 4 hours
 
 function updateTimer() {
@@ -137,6 +137,15 @@ async function validatePhoto(file) {
 
 // --- Redirect logic ---
 async function redirectToResult() {
+  // Check if gameSummary already exists
+  const summarySnap = await db.ref("sneaky-game/gameSummary").get();
+  if (summarySnap.exists()) {
+    // Game already finalized, just redirect
+    window.location.href = "../result/result.html";
+    return;
+  }
+
+  // Get players data
   const snapshot = await db.ref("sneaky-game").get();
   const players = snapshot.val() || {};
   const otherPlayers = Object.keys(players).filter(u => u !== username);
@@ -159,8 +168,8 @@ async function redirectToResult() {
       maxPoints = otherValid;
     } else {
       // Tie
-      points = 5; // each
-      winnerName = "tie";
+      points = 5; // each player
+      winnerName = "both";
       maxPoints = validCount; // both same
     }
   } else {
@@ -170,16 +179,17 @@ async function redirectToResult() {
     maxPoints = validCount;
   }
 
+  // Save points locally
   localStorage.setItem("userPoints", points);
   localStorage.setItem("currentGame", "sneaky-game");
 
-  // Save to gameSummary
+  // Save summary to firebase
   await db.ref("sneaky-game/gameSummary").set({
     winner: winnerName,
     maxPoints: maxPoints
   });
 
-  // Redirect
+  // Redirect to result page
   window.location.href = "../result/result.html";
 }
 
