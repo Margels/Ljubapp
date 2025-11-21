@@ -32,7 +32,7 @@ timerLabel.style.fontWeight = "bold";
 timerLabel.style.fontSize = "1.2rem";
 container.appendChild(timerLabel);
 
-const gameStart = new Date("2025-11-27T11:00:00Z").getTime();
+const gameStart = new Date("2025-11-20T21:40:00Z").getTime();
 const gameDuration = 4 * 60 * 60 * 1000; // 4 hours
 
 function updateTimer() {
