@@ -150,32 +150,67 @@ function renderQuestion() {
   submitBtn.textContent = currentIndex === questions.length - 1 ? "Submit" : "Continue >";
   questionContainer.appendChild(submitBtn);
 
+  // --------------------------------------
   // --- CLICK EVENT FOR SUBMIT BUTTON ---
+  // --------------------------------------
   submitBtn.addEventListener("click", async () => {
+    submitBtn.disabled = true; // prevent double taps
+
     const selected = document.querySelector('input[name="answer"]:checked');
-    if (!selected) return alert("Please select an answer!");
-
-    // Calculate if correct
-    const isCorrect = selected.value === userAnswers.correct;
-    const newCorrectAnswers = userSnap.val().correctAnswers + (isCorrect ? 1 : 0);
-
-    // Update user snapshot
-    currentIndex += 1;
-    const updates = {
-      currentIndex: currentIndex,
-      correctAnswers: newCorrectAnswers,
-      timestamp: new Date().toISOString()
-    };
-    await userRef.update(updates);
-    userSnap = await userRef.get(); // refresh
-
-    // reload question if more questions
-    if (currentIndex < questions.length) {
-      renderQuestion();
-    } else {
-      // finished all questions: check end game
-      await checkEndGame();
+    if (!selected) {
+      submitBtn.disabled = false;
+      return alert("Please select an answer!");
     }
+    
+    // Extract useful info
+    const userAnswers = currentQuestion.answers[username];
+    const isCorrect = selected.value === userAnswers.correct;
+    
+    // Update Firebase values
+    const newCorrectAnswers = userSnap.val().correctAnswers + (isCorrect ? 1 : 0);
+    currentIndex = userSnap.val().currentIndex + 1;
+    
+    await userRef.update({
+      timestamp: new Date().toISOString(),
+      currentIndex,
+      correctAnswers: newCorrectAnswers
+    });
+    userSnap = await userRef.get(); // refresh snapshot
+    
+    // -----------------------------
+    //     CASE 1 — SECOND LAST
+    // -----------------------------
+    if (currentIndex === questions.length - 1) {
+      submitBtn.textContent = "Submit";
+      // Load next question normally
+      currentQuestion = questions[currentIndex];
+      renderQuestion();
+      return;
+    }
+    
+    // -----------------------------
+    //     CASE 2 — LAST QUESTION
+    // -----------------------------
+    if (currentIndex >= questions.length) {
+      submitBtn.textContent = "Waiting for opponent...";
+      submitBtn.style.opacity = "0.2";
+      submitBtn.disabled = true;
+      // Check if summary already created -> redirect immediately
+      const summarySnap = await db.ref("exchange-game/gameSummary").get();
+      if (summarySnap.exists()) {
+        window.location.href = "../result/result.html";
+        return;
+      }
+      // Otherwise evaluate endgame normally
+      await checkEndGame();
+      return;
+    }
+    
+    // -----------------------------
+    //     CASE 3 — ANY OTHER QUESTION
+    // -----------------------------
+    currentQuestion = questions[currentIndex];
+    renderQuestion();
   });
 }
 
