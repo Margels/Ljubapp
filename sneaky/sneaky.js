@@ -32,7 +32,7 @@ timerLabel.style.fontWeight = "bold";
 timerLabel.style.fontSize = "1.2rem";
 container.appendChild(timerLabel);
 
-const gameStart = new Date("2025-11-20T21:30:00Z").getTime();
+const gameStart = new Date("2025-11-27T11:00:00Z").getTime();
 const gameDuration = 4 * 60 * 60 * 1000; // 4 hours
 
 function updateTimer() {
@@ -83,16 +83,24 @@ resultsDiv.id = "results";
 resultsDiv.style.marginTop = "10px";
 container.appendChild(resultsDiv);
 
-// --- Hide upload if already submitted ---
-db.ref(`sneaky-game/${username}`).get().then(snap => {
+// --- Load existing counts from Firebase ---
+let uploadedCount = 0;
+let validCount = 0;
+
+async function loadCounts() {
+  const snap = await db.ref(`sneaky-game/${username}`).get();
   if (snap.exists()) {
     const data = snap.val();
-    uploadLabel.style.display = "none";
-    fileInput.style.display = "none";
-    resultsDiv.textContent =
-      `You had ${data.valid} valid photos out of ${data.uploaded} uploaded.`;
+    uploadedCount = data.uploaded || 0;
+    validCount = data.valid || 0;
+    updateResultsText();
   }
-});
+}
+
+function updateResultsText() {
+  resultsDiv.textContent = `You had ${validCount} valid photos out of ${uploadedCount} uploaded.`;
+}
+loadCounts();
 
 // --- Load face model ---
 let model;
@@ -145,7 +153,7 @@ async function redirectToResult() {
   let winner = username;
   if (otherPlayers.length) {
     const other = players[otherPlayers[0]];
-    if ((other.valid || 0) > (players[username]?.valid || 0)) winner = otherPlayers[0];
+    if ((other.valid || 0) > validCount) winner = otherPlayers[0];
   }
 
   if (winner === username) localStorage.setItem("userPoints", 10);
@@ -158,28 +166,28 @@ fileInput.addEventListener("change", async () => {
   const files = Array.from(fileInput.files);
   if (!files.length) return;
 
+  // Show loader
   loader.style.display = "block";
   uploadLabel.style.display = "none";
 
-  let validCount = 0;
   for (const f of files) {
+    uploadedCount++;
     if (await validatePhoto(f)) validCount++;
+    // Update firebase after each photo
+    await db.ref(`sneaky-game/${username}`).set({
+      uploaded: uploadedCount,
+      valid: validCount
+    });
+    updateResultsText();
   }
 
+  // Hide loader, show upload button again
   loader.style.display = "none";
+  uploadLabel.style.display = "inline-block";
 
-  // Update Firebase
-  const userRef = db.ref(`sneaky-game/${username}`);
-  await userRef.set({
-    uploaded: files.length,
-    valid: validCount
-  });
-
-  resultsDiv.textContent =
-    `You had ${validCount} valid photos out of ${files.length} uploaded.`;
-
-  fileInput.style.display = "none";
-  uploadLabel.style.display = "none";
-
-  redirectToResult();
+  // Optional: if timer ran out, check redirect
+  const now = new Date().getTime();
+  if (now > gameStart + gameDuration) {
+    redirectToResult();
+  }
 });
