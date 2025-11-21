@@ -25,11 +25,37 @@ description.innerHTML =
   "You have 3 hours to try and take as many as you can, but remember: in order to be valid, your enemy must be visible, but also unaware. Whoever takes the most valid photos wins 10 points!";
 container.appendChild(description);
 
-// Upload button
+// --- Timer ---
+const timerLabel = document.createElement("p");
+timerLabel.style.marginTop = "10px";
+timerLabel.style.fontWeight = "bold";
+container.appendChild(timerLabel);
+
+// Set 27 Nov 2025 11:00 Finnish time (UTC+2)
+const gameStart = new Date(Date.UTC(2025, 10, 20, 19, 15, 0)); // 11:00 Finnish UTC+2
+const gameEnd = new Date(gameStart.getTime() + 4 * 60 * 60 * 1000);
+
+function updateTimer() {
+  const now = new Date();
+  const remaining = gameEnd - now;
+  if (remaining <= 0) {
+    timerLabel.textContent = "Time's up!";
+    redirectToResult();
+    return;
+  }
+  const hrs = Math.floor(remaining / (1000 * 60 * 60));
+  const mins = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+  const secs = Math.floor((remaining % (1000 * 60)) / 1000);
+  timerLabel.textContent = `Time left: ${hrs}h ${mins}m ${secs}s`;
+}
+setInterval(updateTimer, 1000);
+updateTimer();
+
+// --- Upload button ---
 const fileInput = document.createElement("input");
 fileInput.type = "file";
-fileInput.multiple = true;
 fileInput.accept = "image/*";
+fileInput.capture = "environment"; // camera only
 fileInput.id = "fileInput";
 container.appendChild(fileInput);
 
@@ -39,7 +65,7 @@ uploadLabel.className = "upload-label";
 uploadLabel.onclick = () => fileInput.click();
 container.appendChild(uploadLabel);
 
-// Results placeholder
+// Results placeholder (permanent)
 const resultsDiv = document.createElement("div");
 resultsDiv.id = "results";
 container.appendChild(resultsDiv);
@@ -53,15 +79,18 @@ loader.style.opacity = "0.7";
 container.appendChild(loader);
 
 // --- Hide upload if already submitted ---
-db.ref(`sneaky-game/${username}`).get().then(snap => {
+async function checkExistingUpload() {
+  const snap = await db.ref(`sneaky-game/${username}`).get();
   if (snap.exists()) {
     const data = snap.val();
     uploadLabel.style.display = "none";
     fileInput.style.display = "none";
-    resultsDiv.textContent =
-      `You had ${data.valid} valid photos out of ${data.uploaded} uploaded.`;
+    resultsDiv.textContent = `You had ${data.valid} valid photos out of ${data.uploaded} uploaded.`;
+    return true;
   }
-});
+  return false;
+}
+checkExistingUpload();
 
 // --- Load face model ---
 let model;
@@ -85,17 +114,14 @@ async function validatePhoto(file) {
   if (!model) return false;
 
   const faces = await model.estimateFaces(img);
-
-  // Accept only if one face is detected
   if (!faces || faces.length !== 1) return false;
 
-  // Check face is large enough
   const face = faces[0];
   const box = face.box;
   const areaRatio = (box.width * box.height) / (img.width * img.height);
-  if (areaRatio < 0.03) return false;
+  if (areaRatio < 0.03) return false; // ensure face is visible
 
-  return true; // Accept all detected faces
+  return true; // accept any detected face
 }
 
 // --- Handle uploads ---
@@ -103,7 +129,6 @@ fileInput.addEventListener("change", async () => {
   const files = Array.from(fileInput.files);
   if (!files.length) return;
 
-  // Show loader
   loader.style.display = "block";
   uploadLabel.style.display = "none";
 
@@ -112,7 +137,6 @@ fileInput.addEventListener("change", async () => {
     if (await validatePhoto(f)) validCount++;
   }
 
-  // Hide loader
   loader.style.display = "none";
 
   // --- Save to Firebase ---
@@ -122,8 +146,7 @@ fileInput.addEventListener("change", async () => {
     valid: validCount
   });
 
-  resultsDiv.textContent =
-    `You had ${validCount} valid photos out of ${files.length} uploaded.`;
+  resultsDiv.textContent = `You had ${validCount} valid photos out of ${files.length} uploaded.`;
 
   // Hide upload permanently
   fileInput.style.display = "none";
@@ -153,5 +176,10 @@ fileInput.addEventListener("change", async () => {
 
   if (winner === username) localStorage.setItem("userPoints", 10);
   resultRef.set({ winner });
-  window.location.href = "../result/result.html";
+  redirectToResult();
 });
+
+// --- Redirect to result ---
+function redirectToResult() {
+  window.location.href = "../result/result.html";
+}
