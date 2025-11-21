@@ -105,9 +105,7 @@ function renderIntro() {
     <h2>Cultural exchange 🗺️</h2>
     <p>
       How well do you know your partner's language?<br><br>
-      Find out through this little quiz.<br>
-      The first to finish the quiz with the most correct answers,<br>
-      wins 10 points!
+      Find out through this little quiz. The first to finish the quiz with the most correct answers, wins 10 points!
     </p>
   `;
 }
