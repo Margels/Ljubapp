@@ -96,10 +96,8 @@ async function checkEndGame() {
   if (winner === username) {
     await db.ref("exchange-game/gameSummary").set({ winner, maxPoints });
     localStorage.setItem("userPoints", maxPoints);
+    window.location.href = "../result/result.html";
   }
-
-  // redirect everyone to result page
-  window.location.href = "../result/result.html";
 }
 
 // --- RENDER INTRO TEXT ---
