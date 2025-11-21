@@ -32,7 +32,7 @@ timerLabel.style.fontWeight = "bold";
 container.appendChild(timerLabel);
 
 // Set 27 Nov 2025 11:00 Finnish time (UTC+2)
-const gameStart = new Date(Date.UTC(2025, 11, 20, 20, 25, 0)); // 11:00 Finnish UTC+2
+const gameStart = new Date(Date.UTC(2025, 11, 20, 22, 25, 0)); // 11:00 Finnish UTC+2
 const gameEnd = new Date(gameStart.getTime() + 4 * 60 * 60 * 1000);
 
 function updateTimer() {
