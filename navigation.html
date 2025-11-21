@@ -182,6 +182,7 @@
       const now = new Date();
       const oracleGameUnlockDate = new Date('2025-11-11T13:00:00'); // TODO: - Change to 26 Nov 2025, 5pm
       const sneakyGameUnlockDate = new Date('2025-11-21T08:45:00'); // TODO: - Change to 27 Nov 2025, 10am
+      const exchangeGameUnlockDate = new Date('2025-11-21T08:45:00'); // TODO: - Change to 27 Nov 2025, 5pm
     
       content.innerHTML = `
         <img src="assets/ljubapp-logo-small.png" alt="Ljubapp Logo" class="logo" />
@@ -210,6 +211,13 @@
         ${now >= sneakyGameUnlockDate ? `
         <a href="sneaky/sneaky.html" class="tile">
           <span>Sneaky game</span>
+          <span class="arrow">➔</span>
+        </a>
+        ` : ''}
+    
+        ${now >= exchangeGameUnlockDate ? `
+        <a href="exchange/exchange.html" class="tile">
+          <span>Cultural exchange</span>
           <span class="arrow">➔</span>
         </a>
         ` : ''}
