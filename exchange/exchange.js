@@ -12,11 +12,19 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+// --- LOCAL STORAGE SETUP ---
 const username = localStorage.getItem("playerName") || "Player";
-localStorage.setItem("userPoints", 0); // reset possible cheating
+localStorage.setItem("userPoints", 0); // reset to prevent double points
 localStorage.setItem("currentGame", "cultural-exchange");
 
 const container = document.getElementById("exchange-container");
+
+// --- GLOBAL REFERENCES ---
+let userRef = db.ref(`exchange-game/${username}`);
+let userSnap = null;
+let questions = [];
+let currentQuestion = null;
+let currentIndex = 0;
 
 // --- LOAD QUESTIONS JSON FROM FIREBASE ---
 async function loadQuestions() {
@@ -26,28 +34,29 @@ async function loadQuestions() {
 
 // --- INITIALIZE USER GAME FOLDER IF NEEDED ---
 async function initializeUserGame() {
-  const userRef = db.ref(`exchange-game/${username}`);
-  const userSnap = await userRef.get();
-  // create user snapshot if unavailable
+  userSnap = await userRef.get();
   if (!userSnap.exists()) {
     await userRef.set({
       timestamp: null,
       currentIndex: 0,
       correctAnswers: 0
     });
+    userSnap = await userRef.get(); // refresh
   }
+  currentIndex = userSnap.val().currentIndex || 0;
 }
 
 // --- CHECK GAME SUMMARY REDIRECT ---
 async function checkGameSummary() {
   const summarySnap = await db.ref("exchange-game/gameSummary").get();
-  // if game summary folder wasn't created, winner hasn't been set yet
   if (!summarySnap.exists()) return false;
-  // if game summary folder exists, determine winner and redirect page
+
   const summary = summarySnap.val();
   if (summary.winner === username) {
+    // Winner already claimed points
     window.location.href = "../profile/profile.html";
   } else {
+    // Loser: go to result page
     window.location.href = "../result/result.html";
   }
   return true;
@@ -55,19 +64,21 @@ async function checkGameSummary() {
 
 // --- CHECK IF BOTH USERS FINISHED AND DETERMINE WINNER ---
 async function checkEndGame() {
-  // get users folder with data
-  const martinaRef = db.ref("exchange-game/Martina");
-  const renatoRef = db.ref("exchange-game/Renato");
-  const [mSnap, rSnap] = await Promise.all([martinaRef.get(), renatoRef.get()]);
-  // if either user hasn't started the game, return
+  const [mSnap, rSnap] = await Promise.all([
+    db.ref("exchange-game/Martina").get(),
+    db.ref("exchange-game/Renato").get()
+  ]);
+
   if (!mSnap.exists() || !rSnap.exists()) return;
-  // if either player is not finished, return
+
   const M = mSnap.val();
   const R = rSnap.val();
+
   const Mdone = M.currentIndex > 14;
   const Rdone = R.currentIndex > 14;
-  if (!Mdone || !Rdone) return;
-  // determine winner by correct answers
+  if (!Mdone || !Rdone) return; // both not finished
+
+  // Determine winner
   let winner = null;
   let maxPoints = null;
   if (M.correctAnswers > R.correctAnswers) {
@@ -76,21 +87,22 @@ async function checkEndGame() {
   } else if (R.correctAnswers > M.correctAnswers) {
     winner = "Renato";
     maxPoints = R.correctAnswers;
-  // if tie, check by timestamps who finished first
   } else {
     winner = (new Date(M.timestamp) < new Date(R.timestamp)) ? "Martina" : "Renato";
     maxPoints = winner === "Martina" ? M.correctAnswers : R.correctAnswers;
   }
-  // save summary only once
-  if ( winner === username) {
+
+  // Only current user can save gameSummary and claim points
+  if (winner === username) {
     await db.ref("exchange-game/gameSummary").set({ winner, maxPoints });
-    localStorage.setItem("userPoints", winner === username ? maxPoints : 0);
+    localStorage.setItem("userPoints", maxPoints);
   }
-  // redirect to result page
+
+  // redirect everyone to result page
   window.location.href = "../result/result.html";
 }
 
-// --- RENDER INTRO TEXT (UI COMES LATER) ---
+// --- RENDER INTRO TEXT ---
 function renderIntro() {
   container.innerHTML = `
     <h2>Cultural exchange 🗺️</h2>
@@ -98,19 +110,88 @@ function renderIntro() {
       How well do you know your partner's language?<br><br>
       Find out through this little quiz. The first to finish the quiz with the most correct answers, wins 10 points!
     </p>
+    <div id="question-container"></div>
   `;
 }
 
-// --- MAIN LOGIC EXECUTION ---
+// --- RENDER QUESTION UI ---
+function renderQuestion() {
+  if (!questions.length) return;
+
+  currentQuestion = questions[currentIndex];
+
+  const userAnswers = currentQuestion.answers[username];
+  const questionText = currentQuestion.question.replace("%@", userAnswers.language);
+
+  const questionContainer = document.getElementById("question-container");
+  questionContainer.innerHTML = "";
+
+  // Question header
+  const qHeader = document.createElement("h2");
+  qHeader.textContent = questionText;
+  questionContainer.appendChild(qHeader);
+
+  // Answer tiles
+  userAnswers.options.forEach((option, i) => {
+    const tile = document.createElement("label");
+    tile.className = "answer-tile";
+    tile.innerHTML = `
+      <input type="radio" name="answer" value="${option}" />
+      <span>${option}</span>
+    `;
+    tile.addEventListener("click", () => {
+      document.querySelectorAll(".answer-tile").forEach(t => t.classList.remove("checked"));
+      tile.classList.add("checked");
+      tile.querySelector("input").checked = true;
+    });
+    questionContainer.appendChild(tile);
+  });
+
+  // Submit / Continue button
+  const submitBtn = document.createElement("button");
+  submitBtn.textContent = currentIndex === questions.length - 1 ? "Submit" : "Continue >";
+  questionContainer.appendChild(submitBtn);
+
+  // --- CLICK EVENT FOR SUBMIT BUTTON ---
+  submitBtn.addEventListener("click", async () => {
+    const selected = document.querySelector('input[name="answer"]:checked');
+    if (!selected) return alert("Please select an answer!");
+
+    // Calculate if correct
+    const isCorrect = selected.value === userAnswers.correct;
+    const newCorrectAnswers = userSnap.val().correctAnswers + (isCorrect ? 1 : 0);
+
+    // Update user snapshot
+    currentIndex += 1;
+    const updates = {
+      currentIndex: currentIndex,
+      correctAnswers: newCorrectAnswers,
+      timestamp: new Date().toISOString()
+    };
+    await userRef.update(updates);
+    userSnap = await userRef.get(); // refresh
+
+    // reload question if more questions
+    if (currentIndex < questions.length) {
+      renderQuestion();
+    } else {
+      // finished all questions: check end game
+      await checkEndGame();
+    }
+  });
+}
+
+// --- MAIN EXECUTION ---
 (async function start() {
   renderIntro();
-
+  // check if user snapshots exist
   await initializeUserGame();
-
+  // check if winner was already selected
   const summaryHandled = await checkGameSummary();
   if (summaryHandled) return;
-
+  // if not, check if both players are done with the game
   await checkEndGame();
-
-  // No redirect means: continue to question rendering later
+  // if not, load questions
+  questions = await loadQuestions();
+  renderQuestion();
 })();
