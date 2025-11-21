@@ -28,7 +28,7 @@ async function loadQuestions() {
 async function initializeUserGame() {
   const userRef = db.ref(`exchange-game/${username}`);
   const userSnap = await userRef.get();
-
+  // create user snapshot if unavailable
   if (!userSnap.exists()) {
     await userRef.set({
       timestamp: null,
@@ -41,63 +41,54 @@ async function initializeUserGame() {
 // --- CHECK GAME SUMMARY REDIRECT ---
 async function checkGameSummary() {
   const summarySnap = await db.ref("exchange-game/gameSummary").get();
-
+  // if game summary folder wasn't created, winner hasn't been set yet
   if (!summarySnap.exists()) return false;
-
+  // if game summary folder exists, determine winner and redirect page
   const summary = summarySnap.val();
-
   if (summary.winner === username) {
-    localStorage.setItem("userPoints", summary.maxPoints);
-    window.location.href = "../result/result.html";
+    window.location.href = "../profile/profile.html";
   } else {
-    localStorage.setItem("userPoints", 0);
     window.location.href = "../result/result.html";
   }
-
   return true;
 }
 
 // --- CHECK IF BOTH USERS FINISHED AND DETERMINE WINNER ---
 async function checkEndGame() {
+  // get users folder with data
   const martinaRef = db.ref("exchange-game/Martina");
   const renatoRef = db.ref("exchange-game/Renato");
-
   const [mSnap, rSnap] = await Promise.all([martinaRef.get(), renatoRef.get()]);
-
+  // if either user hasn't started the game, return
   if (!mSnap.exists() || !rSnap.exists()) return;
-
+  // if either player is not finished, return
   const M = mSnap.val();
   const R = rSnap.val();
-
   const Mdone = M.currentIndex > 14;
   const Rdone = R.currentIndex > 14;
-
-  if (!Mdone || !Rdone) return; // both not finished yet
-
-  // --- Determine winner ---
+  if (!Mdone || !Rdone) return;
+  // determine winner by correct answers
   let winner = null;
   let maxPoints = null;
-
   if (M.correctAnswers > R.correctAnswers) {
     winner = "Martina";
     maxPoints = M.correctAnswers;
   } else if (R.correctAnswers > M.correctAnswers) {
     winner = "Renato";
     maxPoints = R.correctAnswers;
+  // if tie, check by timestamps who finished first
   } else {
-    // tie → check timestamps
     winner = (new Date(M.timestamp) < new Date(R.timestamp)) ? "Martina" : "Renato";
     maxPoints = winner === "Martina" ? M.correctAnswers : R.correctAnswers;
   }
-
-  // Save summary only once
-  await db.ref("exchange-game/gameSummary").set({ winner, maxPoints });
-
-  localStorage.setItem("userPoints", winner === username ? maxPoints : 0);
+  // save summary only once
+  if ( winner === username) {
+    await db.ref("exchange-game/gameSummary").set({ winner, maxPoints });
+    localStorage.setItem("userPoints", winner === username ? maxPoints : 0);
+  }
+  // redirect to result page
   window.location.href = "../result/result.html";
 }
-
-
 
 // --- RENDER INTRO TEXT (UI COMES LATER) ---
 function renderIntro() {
