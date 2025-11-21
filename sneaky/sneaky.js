@@ -32,7 +32,8 @@ timerLabel.style.fontWeight = "bold";
 timerLabel.style.fontSize = "1.2rem";
 container.appendChild(timerLabel);
 
-const gameStart = new Date("2025-11-20T23:00:00Z").getTime();
+// 27 Nov 2025, 11:00 Italy time (UTC+1)
+const gameStart = new Date("2025-11-20T21:00:00Z").getTime(); // UTC + 2
 const gameDuration = 4 * 60 * 60 * 1000; // 4 hours
 
 function updateTimer() {
@@ -140,24 +141,45 @@ async function redirectToResult() {
   const players = snapshot.val() || {};
   const otherPlayers = Object.keys(players).filter(u => u !== username);
 
-  localStorage.setItem("userPoints", 0);
-  localStorage.setItem("currentGame", "sneaky-game");
+  let points = 0;
+  let winnerName = "";
+  let maxPoints = 0;
 
-  const resultRef = db.ref(`sneaky-game/${username}/result`);
-  const resultSnap = await resultRef.get();
-  if (resultSnap.exists()) {
-    window.location.href = "../profile/profile.html";
-    return;
-  }
-
-  let winner = username;
   if (otherPlayers.length) {
     const other = players[otherPlayers[0]];
-    if ((other.valid || 0) > validCount) winner = otherPlayers[0];
+    const otherValid = other.valid || 0;
+
+    if (validCount > otherValid) {
+      points = 10;
+      winnerName = username;
+      maxPoints = validCount;
+    } else if (validCount < otherValid) {
+      points = 10;
+      winnerName = otherPlayers[0];
+      maxPoints = otherValid;
+    } else {
+      // Tie
+      points = 5; // each
+      winnerName = "tie";
+      maxPoints = validCount; // both same
+    }
+  } else {
+    // Only one player
+    points = 10;
+    winnerName = username;
+    maxPoints = validCount;
   }
 
-  if (winner === username) localStorage.setItem("userPoints", 10);
-  await resultRef.set({ winner });
+  localStorage.setItem("userPoints", points);
+  localStorage.setItem("currentGame", "sneaky-game");
+
+  // Save to gameSummary
+  await db.ref("sneaky-game/gameSummary").set({
+    winner: winnerName,
+    maxPoints: maxPoints
+  });
+
+  // Redirect
   window.location.href = "../result/result.html";
 }
 
