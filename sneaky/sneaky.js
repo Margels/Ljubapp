@@ -33,7 +33,7 @@ timerLabel.style.fontSize = "1.2rem";
 container.appendChild(timerLabel);
 
 // 27 Nov 2025, 11:00 Italy time (UTC+1)
-const gameStart = new Date("2025-11-20T21:20:00Z").getTime(); // UTC + 2
+const gameStart = new Date("2025-11-20T21:50:00Z").getTime(); // UTC + 2
 const gameDuration = 4 * 60 * 60 * 1000; // 4 hours
 
 function updateTimer() {
@@ -137,59 +137,98 @@ async function validatePhoto(file) {
 
 // --- Redirect logic ---
 async function redirectToResult() {
-  // Check if gameSummary already exists
-  const summarySnap = await db.ref("sneaky-game/gameSummary").get();
+  const playerName = username;
+  localStorage.setItem("currentGame", "sneaky-game");
+
+  // Check if points were claimed
+  const summaryRef = db.ref("sneaky-game/gameSummary");
+  const summarySnap = await summaryRef.get();
+
+  // One player has already claimed points
   if (summarySnap.exists()) {
-    // Game already finalized, just redirect
+    const summary = summarySnap.val();
+
+    // If tie, grant the second player their points
+    if (summary.winner === "both") {
+      const claimedBy = summary.claimedBy || [];
+
+      // If user has already claimed, redirect
+      if (claimedBy.includes(playerName)) {
+        window.location.href = "../result/result.html";
+        return;
+      }
+
+      // If user hasn't yet claimed, update points and redirect
+      claimedBy.push(playerName);
+      await summaryRef.update({ claimedBy });
+      localStorage.setItem("userPoints", 5);
+      window.location.href = "../result/result.html";
+      return;
+    }
+
+    // If not a tie, just redirect
     window.location.href = "../result/result.html";
     return;
   }
 
-  // Get players data
+  // Determine outcome
   const snapshot = await db.ref("sneaky-game").get();
   const players = snapshot.val() || {};
-  const otherPlayers = Object.keys(players).filter(u => u !== username);
+  const otherPlayers = Object.keys(players).filter(u => u !== playerName);
 
+  // Set points and winner
   let points = 0;
   let winnerName = "";
   let maxPoints = 0;
 
+  // 
   if (otherPlayers.length) {
     const other = players[otherPlayers[0]];
     const otherValid = other.valid || 0;
 
+    // User wins
     if (validCount > otherValid) {
       points = 10;
-      winnerName = username;
+      winnerName = playerName;
       maxPoints = validCount;
+      // Create summary
+      await summaryRef.set({
+        winner: winnerName,
+        maxPoints
+      });
+      
+    // User loses
     } else if (validCount < otherValid) {
-      points = 10;
-      winnerName = otherPlayers[0];
-      maxPoints = otherValid;
+      points = 0;
+
+    // Users tie
     } else {
-      // Tie
-      points = 5; // each player
+      points = 5;
       winnerName = "both";
-      maxPoints = validCount; // both same
+      maxPoints = validCount;
+      // Create summary including claimedBy with this user
+      await summaryRef.set({
+        winner: "both",
+        maxPoints,
+        claimedBy: [playerName]
+      });
     }
+  // Only one player has played
   } else {
-    // Only one player
     points = 10;
-    winnerName = username;
+    winnerName = playerName;
     maxPoints = validCount;
+    await summaryRef.set({
+      winner: winnerName,
+      maxPoints
+    });
   }
 
-  // Save points locally
+  // Save locally
   localStorage.setItem("userPoints", points);
   localStorage.setItem("currentGame", "sneaky-game");
 
-  // Save summary to firebase
-  await db.ref("sneaky-game/gameSummary").set({
-    winner: winnerName,
-    maxPoints: maxPoints
-  });
-
-  // Redirect to result page
+  // Redirect
   window.location.href = "../result/result.html";
 }
 
