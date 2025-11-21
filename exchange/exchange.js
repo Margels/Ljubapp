@@ -95,7 +95,7 @@ async function checkEndGame() {
   // Only current user can save gameSummary and claim points
   if (winner === username) {
     await db.ref("exchange-game/gameSummary").set({ winner, maxPoints });
-    localStorage.setItem("userPoints", maxPoints);
+    localStorage.setItem("userPoints", 10);
     window.location.href = "../result/result.html";
   }
 }
