@@ -154,7 +154,7 @@ async function redirectToResult() {
 
       // If user has already claimed, redirect
       if (claimedBy.includes(playerName)) {
-        window.location.href = "../result/result.html";
+        window.location.href = "../profile/profile.html";
         return;
       }
 
@@ -166,7 +166,13 @@ async function redirectToResult() {
       return;
     }
 
-    // If not a tie, just redirect
+    // If user won, redirect to profile
+    if (summary.winner === playerName) {
+      window.location.href = "../profile/profile.html";
+      return;
+    }
+    
+    // If user lost, redirect to result
     window.location.href = "../result/result.html";
     return;
   }
