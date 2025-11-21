@@ -29,24 +29,27 @@ container.appendChild(description);
 const timerLabel = document.createElement("p");
 timerLabel.style.marginTop = "10px";
 timerLabel.style.fontWeight = "bold";
+timerLabel.style.fontSize = "1.2rem";
 container.appendChild(timerLabel);
 
-// Set 27 Nov 2025 11:00 Finnish time (UTC+2)
-const gameStart = new Date(Date.UTC(2025, 11, 20, 22, 25, 0)); // 11:00 Finnish UTC+2
-const gameEnd = new Date(gameStart.getTime() + 4 * 60 * 60 * 1000);
+const gameStart = new Date("2025-11-27T11:00:00Z").getTime();
+const gameDuration = 4 * 60 * 60 * 1000; // 4 hours
 
 function updateTimer() {
-  const now = new Date();
-  const remaining = gameEnd - now;
+  const now = new Date().getTime();
+  const endTime = gameStart + gameDuration;
+  let remaining = endTime - now;
+
   if (remaining <= 0) {
-    timerLabel.textContent = "Time's up!";
+    timerLabel.textContent = "Time is up!";
     redirectToResult();
     return;
   }
-  const hrs = Math.floor(remaining / (1000 * 60 * 60));
-  const mins = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
-  const secs = Math.floor((remaining % (1000 * 60)) / 1000);
-  timerLabel.textContent = `Time left: ${hrs}h ${mins}m ${secs}s`;
+
+  const h = Math.floor(remaining / (1000 * 60 * 60));
+  const m = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+  const s = Math.floor((remaining % (1000 * 60)) / 1000);
+  timerLabel.textContent = `Time remaining: ${h}h ${m}m ${s}s`;
 }
 setInterval(updateTimer, 1000);
 updateTimer();
@@ -54,43 +57,42 @@ updateTimer();
 // --- Upload button ---
 const fileInput = document.createElement("input");
 fileInput.type = "file";
-fileInput.accept = "image/*";
 fileInput.capture = "environment"; // camera only
+fileInput.accept = "image/*";
 fileInput.id = "fileInput";
+fileInput.style.display = "none";
 container.appendChild(fileInput);
 
 const uploadLabel = document.createElement("label");
-uploadLabel.textContent = "Upload +";
+uploadLabel.textContent = "Take Photo 📷";
 uploadLabel.className = "upload-label";
 uploadLabel.onclick = () => fileInput.click();
 container.appendChild(uploadLabel);
-
-// Results placeholder (permanent)
-const resultsDiv = document.createElement("div");
-resultsDiv.id = "results";
-container.appendChild(resultsDiv);
 
 // Loader
 const loader = document.createElement("p");
 loader.textContent = "Validating photos…";
 loader.style.display = "none";
-loader.style.marginTop = "20px";
+loader.style.marginTop = "10px";
 loader.style.opacity = "0.7";
 container.appendChild(loader);
 
+// Results placeholder
+const resultsDiv = document.createElement("div");
+resultsDiv.id = "results";
+resultsDiv.style.marginTop = "10px";
+container.appendChild(resultsDiv);
+
 // --- Hide upload if already submitted ---
-async function checkExistingUpload() {
-  const snap = await db.ref(`sneaky-game/${username}`).get();
+db.ref(`sneaky-game/${username}`).get().then(snap => {
   if (snap.exists()) {
     const data = snap.val();
     uploadLabel.style.display = "none";
     fileInput.style.display = "none";
-    resultsDiv.textContent = `You had ${data.valid} valid photos out of ${data.uploaded} uploaded.`;
-    return true;
+    resultsDiv.textContent =
+      `You had ${data.valid} valid photos out of ${data.uploaded} uploaded.`;
   }
-  return false;
-}
-checkExistingUpload();
+});
 
 // --- Load face model ---
 let model;
@@ -119,9 +121,36 @@ async function validatePhoto(file) {
   const face = faces[0];
   const box = face.box;
   const areaRatio = (box.width * box.height) / (img.width * img.height);
-  if (areaRatio < 0.03) return false; // ensure face is visible
+  if (areaRatio < 0.03) return false;
 
-  return true; // accept any detected face
+  return true;
+}
+
+// --- Redirect logic ---
+async function redirectToResult() {
+  const snapshot = await db.ref("sneaky-game").get();
+  const players = snapshot.val() || {};
+  const otherPlayers = Object.keys(players).filter(u => u !== username);
+
+  localStorage.setItem("userPoints", 0);
+  localStorage.setItem("currentGame", "sneaky-game");
+
+  const resultRef = db.ref(`sneaky-game/${username}/result`);
+  const resultSnap = await resultRef.get();
+  if (resultSnap.exists()) {
+    window.location.href = "../profile/profile.html";
+    return;
+  }
+
+  let winner = username;
+  if (otherPlayers.length) {
+    const other = players[otherPlayers[0]];
+    if ((other.valid || 0) > (players[username]?.valid || 0)) winner = otherPlayers[0];
+  }
+
+  if (winner === username) localStorage.setItem("userPoints", 10);
+  await resultRef.set({ winner });
+  window.location.href = "../result/result.html";
 }
 
 // --- Handle uploads ---
@@ -139,47 +168,18 @@ fileInput.addEventListener("change", async () => {
 
   loader.style.display = "none";
 
-  // --- Save to Firebase ---
+  // Update Firebase
   const userRef = db.ref(`sneaky-game/${username}`);
   await userRef.set({
     uploaded: files.length,
     valid: validCount
   });
 
-  resultsDiv.textContent = `You had ${validCount} valid photos out of ${files.length} uploaded.`;
+  resultsDiv.textContent =
+    `You had ${validCount} valid photos out of ${files.length} uploaded.`;
 
-  // Hide upload permanently
   fileInput.style.display = "none";
   uploadLabel.style.display = "none";
 
-  // --- Check for opponent ---
-  const snapshot = await db.ref("sneaky-game").get();
-  const players = snapshot.val() || {};
-  const otherPlayers = Object.keys(players).filter(u => u !== username);
-
-  if (!otherPlayers.length) return;
-
-  // both players finished
-  localStorage.setItem("userPoints", 0);
-  localStorage.setItem("currentGame", "sneaky-game");
-
-  const resultRef = db.ref(`sneaky-game/${username}/result`);
-  const resultSnap = await resultRef.get();
-  if (resultSnap.exists()) {
-    window.location.href = "../profile/profile.html";
-    return;
-  }
-
-  const other = players[otherPlayers[0]];
-  let winner = username;
-  if ((other.valid || 0) > validCount) winner = otherPlayers[0];
-
-  if (winner === username) localStorage.setItem("userPoints", 10);
-  resultRef.set({ winner });
   redirectToResult();
 });
-
-// --- Redirect to result ---
-function redirectToResult() {
-  window.location.href = "../result/result.html";
-}
