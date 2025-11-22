@@ -128,6 +128,13 @@ function renderIntro() {
 }
 
 // --- RENDER QUESTION UI ---
+function shuffle(array) {
+  return array
+    .map(value => ({ value, sort: Math.random() }))
+    .sort((a, b) => a.sort - b.sort)
+    .map(({ value }) => value);
+}
+
 function renderQuestion() {
   if (!questions.length) return;
 
@@ -145,7 +152,8 @@ function renderQuestion() {
   questionContainer.appendChild(qHeader);
 
   // Answer tiles
-  userAnswers.options.forEach((option, i) => {
+  const shuffledOptions = shuffle([...userAnswers.options]);
+  shuffledOptions.forEach(option => {
     const tile = document.createElement("label");
     tile.className = "answer-tile";
     tile.innerHTML = `
@@ -238,11 +246,42 @@ function renderQuestion() {
   });
 }
 
+// Firebase live listeners
+function startLiveEndgameWatcher() {
+  db.ref("exchange-game").on("value", async snapshot => {
+    const data = snapshot.val();
+    if (!data) return;
+
+    const M = data.Martina;
+    const R = data.Renato;
+
+    // Only proceed if both exist
+    if (!M || !R) return;
+
+    const Mdone = M.currentIndex > 14;
+    const Rdone = R.currentIndex > 14;
+
+    // When both finished, check game summary
+    if (Mdone && Rdone) {
+      const summarySnap = await db.ref("exchange-game/gameSummary").get();
+
+      if (summarySnap.exists()) {
+        // Summary was already created -> redirect immediately
+        window.location.href = "../result/result.html";
+      } else {
+        // Your normal function triggers summary creation
+        await checkEndGame();
+      }
+    }
+  });
+}
+
 // --- MAIN EXECUTION ---
 (async function start() {
   renderIntro();
   // check if user snapshots exist
   await initializeUserGame();
+  startLiveEndgameWatcher();
   // check if winner was already selected
   const summaryHandled = await checkGameSummary();
   if (summaryHandled) return;
