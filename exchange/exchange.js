@@ -61,6 +61,7 @@ async function checkGameSummary() {
       window.location.href = "../profile/profile.html";
     } else {
       // Has NOT claimed yet → go to result page to claim points
+      localStorage.setItem("userPoints", 10);
       window.location.href = "../result/result.html";
     }
   } else {
@@ -73,6 +74,10 @@ async function checkGameSummary() {
 
 // --- CHECK IF BOTH USERS FINISHED AND DETERMINE WINNER ---
 async function checkEndGame() {
+  
+  const summaryHandled = await checkGameSummary();
+  if (summaryHandled) return;
+  
   const [mSnap, rSnap] = await Promise.all([
     db.ref("exchange-game/Martina").get(),
     db.ref("exchange-game/Renato").get()
@@ -119,7 +124,7 @@ async function checkEndGame() {
 // --- RENDER INTRO TEXT ---
 function renderIntro() {
   container.innerHTML = `
-    <h2>Cultural exchange 🗺️ V2</h2>
+    <h2>Cultural exchange 🗺️ V3</h2>
     <p>
       How well do you know your partner's language?<br><br>
       Find out through this little quiz. The first to finish the quiz with the most correct answers, wins 10 points!
@@ -228,13 +233,10 @@ function renderQuestion() {
       submitBtn.textContent = "Waiting for opponent...";
       submitBtn.style.opacity = "0.2";
       submitBtn.disabled = true;
-      // Check if summary already created -> redirect immediately
-      const summarySnap = await db.ref("exchange-game/gameSummary").get();
-      if (summarySnap.exists()) {
-        window.location.href = "../result/result.html";
-        return;
-      }
-      // Otherwise evaluate endgame normally
+      // check if winner was already selected
+      const summaryHandled = await checkGameSummary();
+      if (summaryHandled) return;
+      // if not, check if both players are done with the game
       await checkEndGame();
       return;
     }
@@ -264,15 +266,11 @@ function startLiveEndgameWatcher() {
 
     // When both finished, check game summary
     if (Mdone && Rdone) {
-      const summarySnap = await db.ref("exchange-game/gameSummary").get();
-
-      if (summarySnap.exists()) {
-        // Summary was already created -> redirect immediately
-        window.location.href = "../result/result.html";
-      } else {
-        // Your normal function triggers summary creation
-        await checkEndGame();
-      }
+      // check if winner was already selected
+      const summaryHandled = await checkGameSummary();
+      if (summaryHandled) return;
+      // if not, check if both players are done with the game
+      await checkEndGame();
     }
   });
 }
