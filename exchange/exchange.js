@@ -108,12 +108,28 @@ async function checkEndGame() {
     maxPoints = winner === "Martina" ? M.correctAnswers : R.correctAnswers;
   }
 
-  const claimedBy = winner === username ? [winner] : [];
-  await db.ref("exchange-game/gameSummary").set({
-    winner,
-    maxPoints,
-    claimedBy
+  const summaryRef = db.ref("exchange-game/gameSummary");
+
+  await summaryRef.transaction(current => {
+    if (current === null) {
+      // First time: create summary
+      return {
+        winner,
+        maxPoints,
+        claimedBy: winner === username ? [username] : []
+      };
+    } else {
+      // Already exists: safely add user to claimedBy if winner
+      if (winner === username) {
+        current.claimedBy = current.claimedBy || [];
+        if (!current.claimedBy.includes(username)) {
+          current.claimedBy.push(username);
+        }
+      }
+      return current;
+    }
   });
+
   
   // Winner gets exactly 10 points. Loser gets 0.
   localStorage.setItem("userPoints", winner === username ? 10 : 0);
@@ -126,7 +142,7 @@ async function checkEndGame() {
 // --- RENDER INTRO TEXT ---
 function renderIntro() {
   container.innerHTML = `
-    <h2>Cultural exchange 🗺️ V5</h2>
+    <h2>Cultural exchange 🗺️ V6</h2>
     <p>
       How well do you know your partner's language?<br><br>
       Find out through this little quiz. The first to finish the quiz with the most correct answers, wins 10 points!
