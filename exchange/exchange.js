@@ -101,10 +101,11 @@ async function checkEndGame() {
     maxPoints = winner === "Martina" ? M.correctAnswers : R.correctAnswers;
   }
 
+  const claimedBy = winner === username ? [winner] : [];
   await db.ref("exchange-game/gameSummary").set({
     winner,
     maxPoints,
-    claimedBy: [winner] // winner immediately claims
+    claimedBy
   });
   
   // Winner gets exactly 10 points. Loser gets 0.
@@ -118,7 +119,7 @@ async function checkEndGame() {
 // --- RENDER INTRO TEXT ---
 function renderIntro() {
   container.innerHTML = `
-    <h2>Cultural exchange 🗺️</h2>
+    <h2>Cultural exchange 🗺️ V2</h2>
     <p>
       How well do you know your partner's language?<br><br>
       Find out through this little quiz. The first to finish the quiz with the most correct answers, wins 10 points!
