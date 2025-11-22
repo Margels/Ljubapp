@@ -74,6 +74,8 @@ async function checkGameSummary() {
 
 // --- CHECK IF BOTH USERS FINISHED AND DETERMINE WINNER ---
 async function checkEndGame() {
+  // Stop listener
+  db.ref("exchange-game").off();
   
   const summaryHandled = await checkGameSummary();
   if (summaryHandled) return;
@@ -124,7 +126,7 @@ async function checkEndGame() {
 // --- RENDER INTRO TEXT ---
 function renderIntro() {
   container.innerHTML = `
-    <h2>Cultural exchange 🗺️ V3</h2>
+    <h2>Cultural exchange 🗺️ V4</h2>
     <p>
       How well do you know your partner's language?<br><br>
       Find out through this little quiz. The first to finish the quiz with the most correct answers, wins 10 points!
