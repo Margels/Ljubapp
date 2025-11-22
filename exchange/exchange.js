@@ -110,21 +110,13 @@ async function checkEndGame() {
 
   const summaryRef = db.ref("exchange-game/gameSummary");
   const summarySnap = await summaryRef.get();
+  const claimedBy = winner === username ? [username] : [];
   
   if (!summarySnap.exists()) {
-    const claimedBy = winner === username ? [username] : [];
     await summaryRef.set({ winner, maxPoints, claimedBy });
   } else { 
     if (winner === username) {
-      // Update existing gameSummary with claimedBy safely
-      await summaryRef.transaction(current => {
-        if (!current) return null; // safeguard
-        current.claimedBy = current.claimedBy || [];
-        if (!current.claimedBy.includes(username)) {
-          current.claimedBy.push(username);
-        }
-        return current;
-      });
+      await summaryRef.update({ claimedBy });
     }
   }
   
@@ -139,7 +131,7 @@ async function checkEndGame() {
 // --- RENDER INTRO TEXT ---
 function renderIntro() {
   container.innerHTML = `
-    <h2>Cultural exchange 🗺️ V7</h2>
+    <h2>Cultural exchange 🗺️ V8</h2>
     <p>
       How well do you know your partner's language?<br><br>
       Find out through this little quiz. The first to finish the quiz with the most correct answers, wins 10 points!
