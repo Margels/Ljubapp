@@ -15,7 +15,7 @@ const db = firebase.database();
 // --- LOCAL STORAGE SETUP ---
 const username = localStorage.getItem("playerName") || "Player";
 localStorage.setItem("userPoints", 0); // reset to prevent double points
-localStorage.setItem("currentGame", "cultural-exchange");
+localStorage.setItem("currentGame", "exchange-game");
 
 const container = document.getElementById("exchange-container");
 
