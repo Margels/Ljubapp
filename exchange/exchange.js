@@ -52,13 +52,22 @@ async function checkGameSummary() {
   if (!summarySnap.exists()) return false;
 
   const summary = summarySnap.val();
+  const claimedBy = summary.claimedBy || [];
+
   if (summary.winner === username) {
-    // Winner already claimed points
-    window.location.href = "../profile/profile.html";
+    // Winner logic
+    if (claimedBy.includes(username)) {
+      // Already claimed → go to profile, no points added
+      window.location.href = "../profile/profile.html";
+    } else {
+      // Has NOT claimed yet → go to result page to claim points
+      window.location.href = "../result/result.html";
+    }
   } else {
-    // Loser: go to result page
+    // Loser → normal result page
     window.location.href = "../result/result.html";
   }
+
   return true;
 }
 
@@ -92,12 +101,18 @@ async function checkEndGame() {
     maxPoints = winner === "Martina" ? M.correctAnswers : R.correctAnswers;
   }
 
-  // Only current user can save gameSummary and claim points
-  if (winner === username) {
-    await db.ref("exchange-game/gameSummary").set({ winner, maxPoints });
-    localStorage.setItem("userPoints", 10);
-    window.location.href = "../result/result.html";
-  }
+  await db.ref("exchange-game/gameSummary").set({
+    winner,
+    maxPoints,
+    claimedBy: [winner] // winner immediately claims
+  });
+  
+  // Winner gets exactly 10 points. Loser gets 0.
+  localStorage.setItem("userPoints", winner === username ? 10 : 0);
+  
+  // Redirect to result (winner can claim)
+  window.location.href = "../result/result.html";
+
 }
 
 // --- RENDER INTRO TEXT ---
@@ -147,14 +162,23 @@ function renderQuestion() {
 
   // Submit / Continue button
   const submitBtn = document.createElement("button");
-  submitBtn.textContent = currentIndex === questions.length - 1 ? "Submit" : "Continue >";
+
+  // If user already finished (currentIndex > last index)
+  if (currentIndex >= questions.length) {
+    submitBtn.textContent = "Waiting for opponent...";
+    submitBtn.disabled = true;
+    submitBtn.style.opacity = "0.2";
+  } else {
+    submitBtn.textContent = currentIndex === questions.length - 1 ? "Submit" : "Continue >";
+  }
+  
   questionContainer.appendChild(submitBtn);
 
   // --------------------------------------
   // --- CLICK EVENT FOR SUBMIT BUTTON ---
   // --------------------------------------
   submitBtn.addEventListener("click", async () => {
-    submitBtn.disabled = true; // prevent double taps
+    submitBtn.disabled = true; // prevent double taps - TODO: button should be disabled also if page loads and user currentIndex > 14
 
     const selected = document.querySelector('input[name="answer"]:checked');
     if (!selected) {
