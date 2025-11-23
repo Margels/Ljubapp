@@ -88,6 +88,15 @@ container.appendChild(resultsDiv);
 let uploadedCount = 0;
 let validCount = 0;
 
+// --- HANDLE EMPTY STATE ---
+function showEndOfGameMessage(container) {
+  container.innerHTML = `
+    <h2>Thanks for playing! 📸</h2>
+    <p>Your sneaky adventure has ended.<br>
+    Don’t worry... more games are coming soon 😉</p>
+  `;
+}
+
 async function loadCounts() {
   const snap = await db.ref(`sneaky-game/${username}`).get();
   if (snap.exists()) {
@@ -135,106 +144,100 @@ async function validatePhoto(file) {
   return true;
 }
 
-// --- Redirect logic ---
-async function redirectToResult() {
-  const playerName = username;
-  localStorage.setItem("currentGame", "sneaky-game");
+// Verify if users have already ended the game
+async function checkGameSummary() {
+  const summarySnap = await db.ref("sneaky-game/gameSummary").get();
+  if (!summarySnap.exists()) return false; // continue the game
 
-  // Check if points were claimed
-  const summaryRef = db.ref("sneaky-game/gameSummary");
-  const summarySnap = await summaryRef.get();
+  const summary = summarySnap.val();
+  const winner = summary.winner;
+  const hasClaimed = summary.claimedBy?.[username] === true;
 
-  // One player has already claimed points
-  if (summarySnap.exists()) {
-    const summary = summarySnap.val();
-
-    // If tie, grant the second player their points
-    if (summary.winner === "both") {
-      const claimedBy = summary.claimedBy || [];
-
-      // If user has already claimed, redirect
-      if (claimedBy.includes(playerName)) {
-        window.location.href = "../profile/profile.html";
-        return;
-      }
-
-      // If user hasn't yet claimed, update points and redirect
-      claimedBy.push(playerName);
-      await summaryRef.update({ claimedBy });
-      localStorage.setItem("userPoints", 5);
-      window.location.href = "../result/result.html";
-      return;
+  if (!hasClaimed) {
+    // User hasn't claimed yet — send to result
+    let pointsToGrant = 0;
+    if (winner === username) {
+      pointsToGrant = 10;
+    } else if (winner === "both") {
+      pointsToGrant = 5;
     }
 
-    // If user won, redirect to profile
-    if (summary.winner === playerName) {
-      window.location.href = "../profile/profile.html";
-      return;
-    }
-    
-    // If user lost, redirect to result
+    localStorage.setItem("userPoints", pointsToGrant);
+    localStorage.setItem("currentGame", "sneaky-game");
     window.location.href = "../result/result.html";
-    return;
+    return true;
   }
 
-  // Determine outcome
-  const snapshot = await db.ref("sneaky-game").get();
-  const players = snapshot.val() || {};
-  const otherPlayers = Object.keys(players).filter(u => u !== playerName);
+  // Already claimed — show final message / empty state
+  showEndOfGameMessage(container);
+  return true;
+}
 
-  // Set points and winner
+// Calculate winner and loser
+async function createSummaryIfNeededAndRedirect() {
+
+  const snapshot = await db.ref("sneaky-game").get();
+  const data = snapshot.val() || {};
+
+  const players = Object.keys(data)
+    .filter(key => key !== "gameSummary")
+    .reduce((acc, key) => {
+      acc[key] = data[key];
+      return acc;
+    }, {});
+
+  const me = players[username] || { valid: 0 };
+  const others = Object.keys(players).filter(p => p !== username);
+
+  let winner = "Nobody";
   let points = 0;
-  let winnerName = "";
   let maxPoints = 0;
 
-  // Both players participated
-  if (otherPlayers.length) {
-    const other = players[otherPlayers[0]];
-    const otherValid = other.valid || 0;
-
-    // User wins
-    if (validCount > otherValid) {
-      points = 10;
-      winnerName = playerName;
-      maxPoints = validCount;
-      // Create summary
-      await summaryRef.set({
-        winner: winnerName,
-        maxPoints
-      });
-      
-    // User loses
-    } else if (validCount < otherValid) {
-      points = 0;
-
-    // Users tie
-    } else {
-      points = 5;
-      winnerName = "both";
-      maxPoints = validCount;
-      // Create summary including claimedBy with this user
-      await summaryRef.set({
-        winner: "both",
-        maxPoints,
-        claimedBy: [playerName]
-      });
-    }
+  if (others.length > 0) {
+    const otherName = others[0];
+    const other = players[otherName] || { valid: 0 };
     
-  // Only one player has played
+    if (me.valid > other.valid) {
+      winner = username;
+      points = 10;
+      maxPoints = me.valid;
+    } else if (me.valid < other.valid) {
+      winner = otherName;
+      points = 0;
+      maxPoints = other.valid;
+    } else {
+      winner = "both";
+      points = 5;
+      maxPoints = me.valid;
+    }
   } else {
-    points = 10;
-    winnerName = playerName;
-    maxPoints = validCount;
+    return;
+  }
+  
+  const summaryRef = db.ref("sneaky-game/gameSummary");
+  const summarySnap = await summaryRef.get();
+  
+  if (!summarySnap.exists()) {
     await summaryRef.set({
-      winner: winnerName,
-      maxPoints
+      winner,
+      maxPoints,
+      claimedBy: { }
     });
   }
 
-  // Save locally and redirect
   localStorage.setItem("userPoints", points);
   localStorage.setItem("currentGame", "sneaky-game");
   window.location.href = "../result/result.html";
+}
+
+// Redirect logic
+async function redirectToResult() {
+  // 1) Check if someone already created summary
+  const handled = await checkGameSummary();
+  if (handled) return;
+
+  // 2) No summary → create one and redirect
+  await createSummaryIfNeededAndRedirect();
 }
 
 // --- Handle uploads ---
@@ -267,3 +270,13 @@ fileInput.addEventListener("change", async () => {
     redirectToResult();
   }
 });
+
+// --- MAIN EXECUTION ---
+(async function start() {
+  // Load counts from DB so UI shows the current numbers
+  await loadCounts();
+
+  // Check if summary already exists (redirect / show end message if needed)
+  const summaryHandled = await checkGameSummary();
+  if (summaryHandled) return;
+})();
