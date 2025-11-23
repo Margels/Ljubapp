@@ -32,8 +32,8 @@ timerLabel.style.fontWeight = "bold";
 timerLabel.style.fontSize = "1.2rem";
 container.appendChild(timerLabel);
 
-// 27 Nov 2025, 11:00 Italy time (UTC+1)
-const gameStart = new Date("2025-11-23T17:05:00Z").getTime(); // UTC + 2
+// 27 Nov 2025, 11:00 Finland time UTC+2
+const gameStart = new Date("2025-11-27T11:00:00").getTime(); // Local time
 const gameDuration = 4 * 60 * 60 * 1000; // 4 hours
 
 function updateTimer() {
