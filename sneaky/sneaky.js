@@ -158,7 +158,7 @@ async function checkGameSummary() {
     let pointsToGrant = 0;
     if (winner === username) {
       pointsToGrant = 10;
-    } else if (winner === "both") {
+    } else if (winner === "Both") {
       pointsToGrant = 5;
     }
 
@@ -206,7 +206,7 @@ async function createSummaryIfNeededAndRedirect() {
       points = 0;
       maxPoints = other.valid;
     } else {
-      winner = "both";
+      winner = "Both";
       points = 5;
       maxPoints = me.valid;
     }
