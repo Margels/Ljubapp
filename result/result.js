@@ -56,6 +56,9 @@ db.ref(`${gameName}/gameSummary`).once("value").then(async snapshot => {
   const summary = snapshot.val();
   const winner = summary?.winner || "Nobody";
   const maxPoints = summary?.maxPoints || 0;
+  
+  // --- Mark this user as having claimed points ---
+  db.ref(`${gameName}/gameSummary/claimedBy/${username}`).set(true);
 
   // --- Get previous points if exist ---
   const userRef = db.ref(`users/${username}`);
