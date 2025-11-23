@@ -16,7 +16,7 @@ const container = document.getElementById("game-container");
 
 // --- Page structure ---
 const title = document.createElement("h2");
-title.textContent = "Sneaky peeky 📸 V1";
+title.textContent = "Sneaky peeky 📸 V2";
 container.appendChild(title);
 
 const description = document.createElement("p");
@@ -33,7 +33,7 @@ timerLabel.style.fontSize = "1.2rem";
 container.appendChild(timerLabel);
 
 // 27 Nov 2025, 11:00 Italy time (UTC+1)
-const gameStart = new Date("2025-11-23T16:43:00Z").getTime(); // UTC + 2
+const gameStart = new Date("2025-11-23T16:52:00Z").getTime(); // UTC + 2
 const gameDuration = 4 * 60 * 60 * 1000; // 4 hours
 
 function updateTimer() {
@@ -93,7 +93,7 @@ function showEndOfGameMessage(container) {
   container.innerHTML = `
     <h2>Thanks for playing! 📸</h2>
     <p>Your sneaky adventure has ended.<br>
-    Don’t worry... more games are coming soon 😉</p>
+    You've been a valid player! Stay tuned for more games!</p>
   `;
 }
 
