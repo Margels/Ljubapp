@@ -26,6 +26,18 @@ let questions = [];
 let currentQuestion = null;
 let currentIndex = 0;
 
+// --- HANDLE EMPTY STATE ---
+function showEndOfGameMessage(container) {
+  container.innerHTML = `
+    <h2>Thank you for playing! 🎉</h2>
+    <p>
+      It was fun playing with you! But don’t sleep just yet:<br>
+      there may be more quizzes in your future… who knows?<br><br>
+      Keep studying for your next tests — they won’t be as easy again! 📚
+    </p>
+  `;
+}
+
 // --- LOAD QUESTIONS JSON FROM FIREBASE ---
 async function loadQuestions() {
   const snap = await db.ref("exchange-game/questions").get();
@@ -48,29 +60,31 @@ async function initializeUserGame() {
 
 // --- CHECK GAME SUMMARY REDIRECT ---
 async function checkGameSummary() {
+  // Check if gameSummary exists; if not, one of the two players hasn't finished playing
   const summarySnap = await db.ref("exchange-game/gameSummary").get();
   if (!summarySnap.exists()) return false;
 
+  // Retrieve winner and claimed status
   const summary = summarySnap.val();
-  const claimedBy = summary.claimedBy || [];
+  const winner = summary.winner;
+  const hasClaimed = summary.claimedBy?.[username] === true;
 
-  if (summary.winner === username) {
-    // Stop listener
-    db.ref("exchange-game").off();
-    // Winner logic
-    if (claimedBy.includes(username)) {
-      // Already claimed → go to profile, no points added
-      window.location.href = "../profile/profile.html";
-    } else {
-      // Has NOT claimed yet → go to result page to claim points
+  if (!hasClaimed) {
+    // Winner has NOT claimed points yet
+    if (winner === username) {
       localStorage.setItem("userPoints", 10);
       window.location.href = "../result/result.html";
+      return true;
+    // Loser hasn't seen result yet
+    } else {
+      localStorage.setItem("userPoints", 0);
+      window.location.href = "../result/result.html";
+      return true;
     }
-  } else {
-    // Loser → normal result page
-    window.location.href = "../result/result.html";
   }
 
+  // Users have already viewed results: show empty state
+  showEndOfGameMessage(container);
   return true;
 }
 
@@ -110,14 +124,9 @@ async function checkEndGame() {
 
   const summaryRef = db.ref("exchange-game/gameSummary");
   const summarySnap = await summaryRef.get();
-  const claimedBy = winner === username ? [username] : [];
   
   if (!summarySnap.exists()) {
-    await summaryRef.set({ winner, maxPoints, claimedBy });
-  } else { 
-    if (winner === username) {
-      await summaryRef.update({ claimedBy });
-    }
+    await summaryRef.set({ winner, maxPoints });
   }
   
   // Winner gets exactly 10 points. Loser gets 0.
