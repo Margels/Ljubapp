@@ -56,20 +56,26 @@ db.ref(`${gameName}/gameSummary`).once("value").then(async snapshot => {
   const summary = snapshot.val();
   const winner = summary?.winner || "Nobody";
   const maxPoints = summary?.maxPoints || 0;
-  
-  // --- Mark this user as having claimed points ---
-  db.ref(`${gameName}/gameSummary/claimedBy/${username}`).set(true);
 
   // --- Get previous points if exist ---
   const userRef = db.ref(`users/${username}`);
   const userSnapshot = await userRef.once("value");
   const prevPoints = userSnapshot.exists() ? parseInt(userSnapshot.val().points || 0) : 0;
 
-  // --- Calculate total ---
-  totalPoints = prevPoints + userPoints; // <-- assign to global variable
+  // --- Prevent double points ---
+  const claimRef = db.ref(`${gameName}/gameSummary/claimedBy/${username}`);
+  const claimSnap = await claimRef.once("value");
+  const alreadyClaimed = claimSnap.exists() && claimSnap.val() === true;
 
-  // --- Update Firebase points ---
-  await userRef.update({ points: totalPoints });
+  if (!alreadyClaimed) {
+    // First time visiting → give and save points
+    totalPoints = prevPoints + userPoints;
+    await claimRef.set(true);
+    await userRef.update({ points: totalPoints });
+  } else {
+    // Already claimed → do not add points again
+    totalPoints = prevPoints;
+  }
 
   // --- Update localStorage too ---
   localStorage.setItem("totalPoints", totalPoints);
