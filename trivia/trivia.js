@@ -19,7 +19,7 @@ localStorage.setItem("currentGame", "trivia-game");
 const container = document.getElementById("exchange-container");
 
 // Firebase refs
-const userRef = db.ref(`trivia-game/${username}`);
+const gameRef = db.ref(`trivia-game`);
 let questions = [];
 let currentIndex = 0;
 let correctAnswers = 0;
@@ -30,7 +30,7 @@ function showEndOfGameMessage() {
     container.innerHTML = `
       <h2>Congrats 🎉</h2>
       <p>
-        Renato got 0 answers right out of 7.
+        Renato got <strong>${correctAnswers}</strong> answers right out of 7.
         It must've been hard supporting your partner all day long... get some rest now!<br>
         Love is in the air 🤍
       </p>
@@ -57,9 +57,9 @@ async function loadQuestions() {
 
 // --- LOAD USER STATE ---
 async function loadUserState() {
-  const snap = await userRef.get();
+  const snap = await gameRef.get();
   if (!snap.exists()) {
-    await userRef.set({
+    await gameRef.set({
       currentIndex: 0,
       correctAnswers: 0
     });
@@ -149,7 +149,7 @@ function renderQuestion() {
     correctAnswers = correctAnswers + (isCorrect ? 1 : 0);
     currentIndex++;
 
-    await userRef.update({
+    await gameRef.update({
       currentIndex,
       correctAnswers
     });
