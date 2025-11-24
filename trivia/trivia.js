@@ -28,7 +28,7 @@ let correctAnswers = 0;
 function showEndOfGameMessage() {
   if (username === "Martina") {
     container.innerHTML = `
-      <h2>Congrats 🎉</h2>
+      <h3 class="end-title">Congrats 🎉</h3>
       <p>
         Renato got <strong>${correctAnswers}</strong> answers right out of 7.
         It must've been hard supporting your partner all day long... get some rest now!<br>
@@ -37,7 +37,7 @@ function showEndOfGameMessage() {
     `;
   } else {
     container.innerHTML = `
-      <h2>Congrats 🎉</h2>
+      <h3 class="end-title">Congrats 🎉</h3>
       <p>
         You answered all the questions!<br><br>
         Time to enjoy the rest of the evening together ❤️
@@ -110,7 +110,7 @@ function renderQuestion() {
   const q = questions[currentIndex];
 
   questionContainer.innerHTML = `
-    <h2>${q.question}</h2>
+    <h3>${q.question}</h3>
   `;
 
   // Shuffle options
