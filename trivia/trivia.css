@@ -12,6 +12,12 @@ h2 {
   font-weight: 700;
 }
 
+h3 {
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+  font-weight: 700;
+}
+
 p {
   opacity: 0.9;
   line-height: 1.6;
@@ -64,4 +70,10 @@ button:hover {
 #exchange-container {
   max-width: 600px;
   margin: auto;
+}
+
+.end-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 20px;
 }
