@@ -184,6 +184,7 @@
       const sneakyGameUnlockDate = new Date('2025-11-21T08:45:00'); // TODO: - Change to 27 Nov 2025, 10am
       const exchangeGameUnlockDate = new Date('2025-11-21T08:45:00'); // TODO: - Change to 27 Nov 2025, 5pm
       const triviaGameUnlockDate = new Date('2025-11-21T08:45:00'); // TODO: - Change to 27 Nov 2025, 8pm
+      const presentGameUnlockDate = new Date('2025-11-21T08:45:00'); // TODO: - Change to 28 Nov 2025, 1pm
     
       content.innerHTML = `
         <img src="assets/ljubapp-logo-small.png" alt="Ljubapp Logo" class="logo" />
@@ -226,6 +227,13 @@
         ${now >= triviaGameUnlockDate ? `
         <a href="trivia/trivia.html" class="tile">
           <span>Trivia Quiz</span>
+          <span class="arrow">➔</span>
+        </a>
+        ` : ''}
+    
+        ${now >= presentGameUnlockDate ? `
+        <a href="present/present.html" class="tile">
+          <span>Guess the present</span>
           <span class="arrow">➔</span>
         </a>
         ` : ''}
