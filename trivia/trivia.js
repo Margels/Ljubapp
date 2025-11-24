@@ -171,6 +171,11 @@ function renderQuestion() {
   await loadUserState();
   questions = await loadQuestions();
 
+  if (username === "Martina" && currentIndex >= questions.length) {
+    showEndOfGameMessage();
+    return;
+  }
+
   if (username === "Renato") {
     renderQuestion();
   }
