@@ -151,9 +151,9 @@ function renderPage(container, questionObj, points, index, username, unlockTime)
     <p class="description">
       Listen carefully: <strong>your opponent has been dropping hints about what will come next</strong>! 🔮 <br><br>
       Gather enough information to answer the question below. You will have to choose among 4 options: <br>
-      - one is the correct answer; it will win you 5 points. <br>
-      - one is close to correct; this will win 2 points for both. <br>
-      - the two remaining options are wrong; they'll earn 5 points. <br><br>
+      - one is the correct answer; it will win you 10 points. <br>
+      - one is close to correct; this will win 5 points for both. <br>
+      - the two remaining options are wrong; opponent will earn 10 points. <br><br>
       Beware: some hints are lies to mislead and deceive you! <br><br> 
       Good luck, Oracle!
     </p>
@@ -230,17 +230,17 @@ async function processAnswer(selected, questionObj, index, username) {
     // Determine winner
     if (selected === correct) {
       winner = "Renato";
-      maxPoints = 5;
-      if (username === "Renato") localStorage.setItem("userPoints", "5");
+      maxPoints = 10;
+      if (username === "Renato") localStorage.setItem("userPoints", "10");
     } else if (selected === close) {
       winner = "Both";
-      maxPoints = 2;
-      martinaPoints += 2;
-      if (username === "Renato") localStorage.setItem("userPoints", "2");
-    } else {
-      winner = "Martina";
       maxPoints = 5;
       martinaPoints += 5;
+      if (username === "Renato") localStorage.setItem("userPoints", "5");
+    } else {
+      winner = "Martina";
+      maxPoints = 10;
+      martinaPoints += 10;
       if (username === "Renato") localStorage.setItem("userPoints", "0");
     }
 
