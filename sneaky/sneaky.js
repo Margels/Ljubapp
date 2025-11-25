@@ -16,7 +16,7 @@ const container = document.getElementById("game-container");
 
 // --- Page structure ---
 const title = document.createElement("h2");
-title.textContent = "Sneaky peeky 📸 V3";
+title.textContent = "Sneaky peeky 📸";
 container.appendChild(title);
 
 const description = document.createElement("p");
