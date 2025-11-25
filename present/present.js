@@ -50,7 +50,7 @@ gameRef.on("value", (snap) => {
 /* --------------------------------------------------
    RENDER PAGE
 -------------------------------------------------- */
-function renderPage() {
+async function renderPage() {
   const entry = gameData[currentIndex];
 
   if (!entry) {
