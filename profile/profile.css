@@ -124,6 +124,6 @@ body {
 }
 
 .add-prize-btn:hover {
-  background: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0);
   transform: scale(1.1);
 }
