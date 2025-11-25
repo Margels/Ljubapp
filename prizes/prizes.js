@@ -105,7 +105,13 @@ confirmPrizeBtn.addEventListener("click", async () => {
   await userRef.update({ points: totalPoints });
   await userRef.child("prizesCollected").push(prizeData);
 
-  window.location.href = "../profile/profile.html";
+  // Hide all main content
+  document.getElementById("pointsContainer").classList.add("hidden");
+  document.getElementById("claimSection").classList.add("hidden");
+  
+  // Show success message
+  document.getElementById("successMessage").classList.remove("hidden");
+
 });
 
 
