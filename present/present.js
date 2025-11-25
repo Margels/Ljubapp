@@ -54,7 +54,10 @@ function renderPage() {
   const entry = gameData[currentIndex];
 
   if (!entry) {
-    container.innerHTML = `<h2>Guess the present 🎁</h2><p>No more items to guess!</p>`;
+     const correctRef = gameRef.child("correctAnswers");
+    const correctSnap = await correctRef.get();
+    const correctAnswers = correctSnap.val() || 0;
+    container.innerHTML = `<h2>Guess the present 🎁</h2><p>Congrats! You completed the game! <br><br> You guessed ${correctAnswers} gifts out of 7.</p>`;
     return;
   }
 
@@ -108,19 +111,32 @@ function setupMartinaButtons() {
    winnerName = "Renato" or "Martina"
 -------------------------------------------------- */
 async function handleResult(winnerName, messageForRenato) {
+
   // 1. Increase winner points
   const userPointsRef = usersRef.child(`${winnerName}/points`);
   const pointsSnap = await userPointsRef.get();
   const oldPoints = pointsSnap.val() || 0;
   await userPointsRef.set(oldPoints + 1);
 
-  // 2. Move to next index
+  // 2. Save winner under the current question
+  const winnerRef = gameRef.child(`${currentIndex}/winner`);
+  await winnerRef.set(winnerName);
+
+  // 3. Update correctAnswers (only when Renato guesses)
+  if (winnerName === "Renato") {
+    const correctRef = gameRef.child("correctAnswers");
+    const correctSnap = await correctRef.get();
+    const oldCorrect = correctSnap.val() || 0;
+    await correctRef.set(oldCorrect + 1);
+  }
+
+  // 4. Move to the next index
   const newIndex = currentIndex + 1;
 
   await gameRef.update({
     currentIndex: newIndex,
-    lastResultMessage: messageForRenato   // 3. Set message for Renato
+    lastResultMessage: messageForRenato
   });
 
-  // Rendering will happen automatically thanks to the listener
+  // UI updates automatically via the live listener
 }
