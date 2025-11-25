@@ -61,7 +61,7 @@ async function renderPage() {
     return;
   }
 
-  container.innerHTML = `<h2>Guess the present 🎁 V3</h2>`;
+  container.innerHTML = `<h2>Guess the present 🎁</h2>`;
 
   if (username === "Renato") {
     container.innerHTML += `
