@@ -58,7 +58,7 @@ function renderPage() {
     return;
   }
 
-  container.innerHTML = `<h2>Guess the present 🎁</h2>`;
+  container.innerHTML = `<h2>Guess the present 🎁 V1</h2>`;
 
   if (username === "Renato") {
     container.innerHTML += `
