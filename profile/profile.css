@@ -109,7 +109,7 @@ body {
 .prize-header {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between; /* 👈 pushes "+" to the far right */
 }
 
 .add-prize-btn {
@@ -127,3 +127,4 @@ body {
   background: rgba(255, 255, 255, 0);
   transform: scale(1.1);
 }
+
