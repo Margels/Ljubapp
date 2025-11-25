@@ -29,18 +29,21 @@ const confirmPrizeBtn = document.getElementById("confirmPrizeBtn");
 let selectedPrize = null;
 
 // --- LOAD WINNER INFO ---
-db.ref(`users/${username}/points`).once("value").then(async snapshot => {
+let totalPoints = 0; // make global
 
-  // --- Get user points if exist ---
-  const userRef = db.ref(`users/${username}`);
-  const userSnapshot = await userRef.once("value");
+// --- LOAD USER INFO ---
+db.ref(`users/${username}`).once("value").then(snapshot => {
+  const user = snapshot.val();
+  totalPoints = user.points || 0;
 
-  // --- Update localStorage too ---
+  // Update UI + localStorage
+  pointsDisplay.textContent = `🎯 Total: ${totalPoints}`;
   localStorage.setItem("totalPoints", totalPoints);
 
-  // --- Load info ---
   claimSection.classList.remove("hidden");
-  pointsDisplay.textContent = `🎯 Total: ${totalPoints}`;
+
+  // Now we can load prizes
+  loadPrizes();
 });
 
 // --- LOAD PRIZES ---
@@ -85,33 +88,26 @@ function loadPrizes() {
 confirmPrizeBtn.addEventListener("click", async () => {
   if (!selectedPrize) return;
 
-  // Proceed only if user has just played (prevent re enter page through back button)
-  const currentGame = localStorage.getItem("currentGame");
-  if (currentGame) {
-      
-    // Deduct points
-    totalPoints -= selectedPrize.points;
-    localStorage.setItem("totalPoints", totalPoints);
-  
-    // Prepare prize data (⚠️ unclaimed — no claimedAt yet)
-    const prizeData = {
-      title: selectedPrize.title,
-      emoji: selectedPrize.emoji,
-      points: selectedPrize.points,
-      duration: selectedPrize.duration || {},
-      status: "unclaimed"
-    };
-  
-    const userRef = db.ref(`users/${username}`);
-  
-    // Save updated points and add prize to user history
-    await userRef.update({ points: totalPoints });
-    await userRef.child("prizesCollected").push(prizeData);
-  }
+  // Deduct
+  totalPoints -= selectedPrize.points;
+  localStorage.setItem("totalPoints", totalPoints);
 
-  // Redirect to profile
+  // Prepare prize object
+  const prizeData = {
+    title: selectedPrize.title,
+    emoji: selectedPrize.emoji,
+    points: selectedPrize.points,
+    duration: selectedPrize.duration || {},
+    status: "unclaimed"
+  };
+
+  const userRef = db.ref(`users/${username}`);
+  await userRef.update({ points: totalPoints });
+  await userRef.child("prizesCollected").push(prizeData);
+
   window.location.href = "../profile/profile.html";
 });
+
 
 // --- PROFILE BUTTON ---
 profileBtn.addEventListener("click", async () => {
