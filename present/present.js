@@ -1,4 +1,6 @@
-// --- CONFIGURE FIREBASE ---
+/* --------------------------------------------------
+   FIREBASE SETUP
+-------------------------------------------------- */
 const firebaseConfig = {
   apiKey: "AIzaSyAhNkyI7aG6snk2hPergYyGdftBBN9M1h0",
   authDomain: "ljubapp.firebaseapp.com",
@@ -17,54 +19,60 @@ localStorage.setItem("currentGame", "present-game");
 
 const container = document.getElementById("present-container");
 
+// Database refs
 const gameRef = db.ref("present-game");
-let currentIndex = 0;
-let gameData = {};
+const usersRef = db.ref("users");
 
-// --- LOAD GAME DATA ---
-async function loadGame() {
-  const snap = await gameRef.get();
-  if (!snap.exists()) {
-    console.error("No present-game data found in Firebase!");
-    container.innerHTML = `<p>Game data missing.</p>`;
-    return;
-  }
+// Data
+let gameData = {};
+let currentIndex = 0;
+
+/* --------------------------------------------------
+   LIVE LISTENER FOR GAME STATE (AUTO UPDATES)
+-------------------------------------------------- */
+gameRef.on("value", (snap) => {
+  if (!snap.exists()) return;
 
   gameData = snap.val();
-  currentIndex = snap.val().currentIndex ?? 0;
+  currentIndex = gameData.currentIndex || 0;
 
-  renderPage();
-}
+  // If Renato should see a prompt (from Martina)
+  if (username === "Renato" && gameData.lastResultMessage) {
+    alert(gameData.lastResultMessage);
 
-// --- RENDER PAGE ---
+    // Clear message so it doesn't show again
+    gameRef.update({ lastResultMessage: "" });
+  }
+
+  renderPage(); // always refresh UI
+});
+
+/* --------------------------------------------------
+   RENDER PAGE
+-------------------------------------------------- */
 function renderPage() {
   const entry = gameData[currentIndex];
 
   if (!entry) {
-    container.innerHTML = `<p>Invalid question index.</p>`;
+    container.innerHTML = `<h2>Guess the present 🎁</h2><p>No more items to guess!</p>`;
     return;
   }
 
-  container.innerHTML = `
-    <h2>Guess the present 🎁</h2>
-  `;
+  container.innerHTML = `<h2>Guess the present 🎁</h2>`;
 
   if (username === "Renato") {
-    // --- RENDER RENATO VIEW ---
     container.innerHTML += `
       <p>
         Can you guess which present is which?<br><br>
-        Here's a little hint: pick the present that you think corresponds to this description!
+        Here's a little hint: pick the present that you think matches this description!
       </p>
-
       <h3>${entry.hint || "No hint available"}</h3>
     `;
   } else if (username === "Martina") {
-    // --- RENDER MARTINA VIEW ---
     container.innerHTML += `
       <p>
         Don't let your partner see this!<br>
-        Here's the answer to their question — make sure they guess it right...
+        Here's the answer to the question — make sure they guess it right...
       </p>
 
       <h3>${entry.answer}</h3>
@@ -75,16 +83,44 @@ function renderPage() {
       <button id="btn-wrong" class="secondary-btn">He didn't guess...</button>
     `;
 
-    // Buttons don't do anything yet — will add logic later
-    document.getElementById("btn-correct").addEventListener("click", () => {
-      alert("Button tapped — action to be added later.");
-    });
-
-    document.getElementById("btn-wrong").addEventListener("click", () => {
-      alert("Button tapped — action to be added later.");
-    });
+    setupMartinaButtons();
   }
 }
 
-// --- MAIN ---
-loadGame();
+/* --------------------------------------------------
+   BUTTON LOGIC FOR MARTINA
+-------------------------------------------------- */
+function setupMartinaButtons() {
+  const correctBtn = document.getElementById("btn-correct");
+  const wrongBtn = document.getElementById("btn-wrong");
+
+  correctBtn.addEventListener("click", () => {
+    handleResult("Renato", "Congrats! You guessed it! 🎉");
+  });
+
+  wrongBtn.addEventListener("click", () => {
+    handleResult("Martina", "Sorry! You lost 🥲");
+  });
+}
+
+/* --------------------------------------------------
+   HANDLE BUTTON RESULT
+   winnerName = "Renato" or "Martina"
+-------------------------------------------------- */
+async function handleResult(winnerName, messageForRenato) {
+  // 1. Increase winner points
+  const userPointsRef = usersRef.child(`${winnerName}/points`);
+  const pointsSnap = await userPointsRef.get();
+  const oldPoints = pointsSnap.val() || 0;
+  await userPointsRef.set(oldPoints + 1);
+
+  // 2. Move to next index
+  const newIndex = currentIndex + 1;
+
+  await gameRef.update({
+    currentIndex: newIndex,
+    lastResultMessage: messageForRenato   // 3. Set message for Renato
+  });
+
+  // Rendering will happen automatically thanks to the listener
+}
