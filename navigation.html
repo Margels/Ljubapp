@@ -180,8 +180,11 @@
     function showNavigation() {
       const player = localStorage.getItem('playerName') || 'Player';
       const now = new Date();
-      const oracleGameUnlockDate = new Date('2025-11-11T13:00:00'); // TODO: - Change to 26 Nov 2025, 5pm
-      const sneakyGameUnlockDate = new Date('2025-11-11T13:00:00'); // TODO: - Change to 27 Nov 2025, 10am
+      const oracleGameUnlockDate = new Date('2025-11-26T17:00:00'); // 26 Nov 2025, 5pm
+      const sneakyGameUnlockDate = new Date('2025-11-27T10:00:00'); // 27 Nov 2025, 10am
+      const exchangeGameUnlockDate = new Date('2025-11-27T17:00:00'); // 27 Nov 2025, 5pm
+      const triviaGameUnlockDate = new Date('2025-11-27T20:00:00'); // 27 Nov 2025, 8pm
+      const presentGameUnlockDate = new Date('2025-11-28T13:00:00'); // 28 Nov 2025, 1pm
     
       content.innerHTML = `
         <img src="assets/ljubapp-logo-small.png" alt="Ljubapp Logo" class="logo" />
@@ -195,8 +198,13 @@
           <span class="arrow">➔</span>
         </a>
     
+        <a href="prizes/prizes.html" class="tile">
+          <span>Claim a prize</span>
+          <span class="arrow">➔</span>
+        </a>
+    
         <a href="menu/menu.html" class="tile">
-          <span>Menu</span>
+          <span>Menu of the day</span>
           <span class="arrow">➔</span>
         </a>
     
@@ -209,7 +217,28 @@
     
         ${now >= sneakyGameUnlockDate ? `
         <a href="sneaky/sneaky.html" class="tile">
-          <span>Sneaky game</span>
+          <span>Sneaky Peeky</span>
+          <span class="arrow">➔</span>
+        </a>
+        ` : ''}
+    
+        ${now >= exchangeGameUnlockDate ? `
+        <a href="exchange/exchange.html" class="tile">
+          <span>Cultural Exchange</span>
+          <span class="arrow">➔</span>
+        </a>
+        ` : ''}
+    
+        ${now >= triviaGameUnlockDate ? `
+        <a href="trivia/trivia.html" class="tile">
+          <span>Trivia Quiz</span>
+          <span class="arrow">➔</span>
+        </a>
+        ` : ''}
+    
+        ${now >= presentGameUnlockDate ? `
+        <a href="present/present.html" class="tile">
+          <span>Guess the present</span>
           <span class="arrow">➔</span>
         </a>
         ` : ''}

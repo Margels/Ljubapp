@@ -11,7 +11,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-const username = (localStorage.getItem("playerName") || "Player").toLowerCase();
+const username = localStorage.getItem("playerName") || "Player";
 const container = document.getElementById("game-container");
 
 // --- Page structure ---
@@ -25,43 +25,92 @@ description.innerHTML =
   "You have 3 hours to try and take as many as you can, but remember: in order to be valid, your enemy must be visible, but also unaware. Whoever takes the most valid photos wins 10 points!";
 container.appendChild(description);
 
-// Upload button
+// --- Timer ---
+const timerLabel = document.createElement("p");
+timerLabel.style.marginTop = "10px";
+timerLabel.style.fontWeight = "bold";
+timerLabel.style.fontSize = "1.2rem";
+container.appendChild(timerLabel);
+
+// 27 Nov 2025, 11:00 Finland time UTC+2
+const gameStart = new Date("2025-11-27T11:00:00").getTime(); // Local time
+const gameDuration = 4 * 60 * 60 * 1000; // 4 hours
+
+function updateTimer() {
+  const now = new Date().getTime();
+  const endTime = gameStart + gameDuration;
+  let remaining = endTime - now;
+
+  if (remaining <= 0) {
+    timerLabel.textContent = "Time is up!";
+    redirectToResult();
+    return;
+  }
+
+  const h = Math.floor(remaining / (1000 * 60 * 60));
+  const m = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+  const s = Math.floor((remaining % (1000 * 60)) / 1000);
+  timerLabel.textContent = `Time remaining: ${h}h ${m}m ${s}s`;
+}
+setInterval(updateTimer, 1000);
+updateTimer();
+
+// --- Upload button ---
 const fileInput = document.createElement("input");
 fileInput.type = "file";
-fileInput.multiple = true;
+fileInput.capture = "environment"; // camera only
 fileInput.accept = "image/*";
 fileInput.id = "fileInput";
+fileInput.style.display = "none";
 container.appendChild(fileInput);
 
 const uploadLabel = document.createElement("label");
-uploadLabel.textContent = "Upload +";
+uploadLabel.textContent = "Take Photo 📷";
 uploadLabel.className = "upload-label";
 uploadLabel.onclick = () => fileInput.click();
 container.appendChild(uploadLabel);
-
-// Results placeholder
-const resultsDiv = document.createElement("div");
-resultsDiv.id = "results";
-container.appendChild(resultsDiv);
 
 // Loader
 const loader = document.createElement("p");
 loader.textContent = "Validating photos…";
 loader.style.display = "none";
-loader.style.marginTop = "20px";
+loader.style.marginTop = "10px";
 loader.style.opacity = "0.7";
 container.appendChild(loader);
 
-// --- Hide upload if already submitted ---
-db.ref(`sneaky-game/${username}`).get().then(snap => {
+// Results placeholder
+const resultsDiv = document.createElement("div");
+resultsDiv.id = "results";
+resultsDiv.style.marginTop = "10px";
+container.appendChild(resultsDiv);
+
+// --- Load existing counts from Firebase ---
+let uploadedCount = 0;
+let validCount = 0;
+
+// --- HANDLE EMPTY STATE ---
+function showEndOfGameMessage(container) {
+  container.innerHTML = `
+    <h2>Thanks for playing! 📸</h2>
+    <p>Your sneaky adventure has ended.<br>
+    You've been a valid player! Stay tuned for more games!</p>
+  `;
+}
+
+async function loadCounts() {
+  const snap = await db.ref(`sneaky-game/${username}`).get();
   if (snap.exists()) {
     const data = snap.val();
-    uploadLabel.style.display = "none";
-    fileInput.style.display = "none";
-    resultsDiv.textContent =
-      `You had ${data.valid} valid photos out of ${data.uploaded} uploaded.`;
+    uploadedCount = data.uploaded || 0;
+    validCount = data.valid || 0;
+    updateResultsText();
   }
-});
+}
+
+function updateResultsText() {
+  resultsDiv.textContent = `You had ${validCount} valid photos out of ${uploadedCount} uploaded.`;
+}
+loadCounts();
 
 // --- Load face model ---
 let model;
@@ -85,17 +134,110 @@ async function validatePhoto(file) {
   if (!model) return false;
 
   const faces = await model.estimateFaces(img);
-
-  // Accept only if one face is detected
   if (!faces || faces.length !== 1) return false;
 
-  // Check face is large enough
   const face = faces[0];
   const box = face.box;
   const areaRatio = (box.width * box.height) / (img.width * img.height);
   if (areaRatio < 0.03) return false;
 
-  return true; // Accept all detected faces
+  return true;
+}
+
+// Verify if users have already ended the game
+async function checkGameSummary() {
+  const summarySnap = await db.ref("sneaky-game/gameSummary").get();
+  if (!summarySnap.exists()) return false; // continue the game
+
+  const summary = summarySnap.val();
+  const winner = summary.winner;
+  const hasClaimed = summary.claimedBy?.[username] === true;
+
+  if (!hasClaimed) {
+    // User hasn't claimed yet — send to result
+    let pointsToGrant = 0;
+    if (winner === username) {
+      pointsToGrant = 10;
+    } else if (winner === "Both") {
+      pointsToGrant = 5;
+    }
+
+    localStorage.setItem("userPoints", pointsToGrant);
+    localStorage.setItem("currentGame", "sneaky-game");
+    window.location.href = "../result/result.html";
+    return true;
+  }
+
+  // Already claimed — show final message / empty state
+  showEndOfGameMessage(container);
+  return true;
+}
+
+// Calculate winner and loser
+async function createSummaryIfNeededAndRedirect() {
+
+  const snapshot = await db.ref("sneaky-game").get();
+  const data = snapshot.val() || {};
+
+  const players = Object.keys(data)
+    .filter(key => key !== "gameSummary")
+    .reduce((acc, key) => {
+      acc[key] = data[key];
+      return acc;
+    }, {});
+
+  const me = players[username] || { valid: 0 };
+  const others = Object.keys(players).filter(p => p !== username);
+
+  let winner = "Nobody";
+  let points = 0;
+  let maxPoints = 0;
+
+  if (others.length > 0) {
+    const otherName = others[0];
+    const other = players[otherName] || { valid: 0 };
+    
+    if (me.valid > other.valid) {
+      winner = username;
+      points = 10;
+      maxPoints = me.valid;
+    } else if (me.valid < other.valid) {
+      winner = otherName;
+      points = 0;
+      maxPoints = other.valid;
+    } else {
+      winner = "Both";
+      points = 5;
+      maxPoints = me.valid;
+    }
+  } else {
+    return;
+  }
+  
+  const summaryRef = db.ref("sneaky-game/gameSummary");
+  const summarySnap = await summaryRef.get();
+  
+  if (!summarySnap.exists()) {
+    await summaryRef.set({
+      winner,
+      maxPoints,
+      claimedBy: { }
+    });
+  }
+
+  localStorage.setItem("userPoints", points);
+  localStorage.setItem("currentGame", "sneaky-game");
+  window.location.href = "../result/result.html";
+}
+
+// Redirect logic
+async function redirectToResult() {
+  // 1) Check if someone already created summary
+  const handled = await checkGameSummary();
+  if (handled) return;
+
+  // 2) No summary → create one and redirect
+  await createSummaryIfNeededAndRedirect();
 }
 
 // --- Handle uploads ---
@@ -107,51 +249,34 @@ fileInput.addEventListener("change", async () => {
   loader.style.display = "block";
   uploadLabel.style.display = "none";
 
-  let validCount = 0;
   for (const f of files) {
+    uploadedCount++;
     if (await validatePhoto(f)) validCount++;
+    // Update firebase after each photo
+    await db.ref(`sneaky-game/${username}`).set({
+      uploaded: uploadedCount,
+      valid: validCount
+    });
+    updateResultsText();
   }
 
-  // Hide loader
+  // Hide loader, show upload button again
   loader.style.display = "none";
+  uploadLabel.style.display = "inline-block";
 
-  // --- Save to Firebase ---
-  const userRef = db.ref(`sneaky-game/${username}`);
-  await userRef.set({
-    uploaded: files.length,
-    valid: validCount
-  });
-
-  resultsDiv.textContent =
-    `You had ${validCount} valid photos out of ${files.length} uploaded.`;
-
-  // Hide upload permanently
-  fileInput.style.display = "none";
-  uploadLabel.style.display = "none";
-
-  // --- Check for opponent ---
-  const snapshot = await db.ref("sneaky-game").get();
-  const players = snapshot.val() || {};
-  const otherPlayers = Object.keys(players).filter(u => u !== username);
-
-  if (!otherPlayers.length) return;
-
-  // both players finished
-  localStorage.setItem("userPoints", 0);
-  localStorage.setItem("currentGame", "sneaky-game");
-
-  const resultRef = db.ref(`sneaky-game/${username}/result`);
-  const resultSnap = await resultRef.get();
-  if (resultSnap.exists()) {
-    window.location.href = "../profile/profile.html";
-    return;
+  // Optional: if timer ran out, check redirect
+  const now = new Date().getTime();
+  if (now > gameStart + gameDuration) {
+    redirectToResult();
   }
-
-  const other = players[otherPlayers[0]];
-  let winner = username;
-  if ((other.valid || 0) > validCount) winner = otherPlayers[0];
-
-  if (winner === username) localStorage.setItem("userPoints", 10);
-  resultRef.set({ winner });
-  window.location.href = "../result/result.html";
 });
+
+// --- MAIN EXECUTION ---
+(async function start() {
+  // Load counts from DB so UI shows the current numbers
+  await loadCounts();
+
+  // Check if summary already exists (redirect / show end message if needed)
+  const summaryHandled = await checkGameSummary();
+  if (summaryHandled) return;
+})();

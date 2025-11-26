@@ -105,3 +105,26 @@ body {
 .prize-tile.expired {
   animation: fadeOut 0.8s ease forwards;
 }
+
+.prize-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* 👈 pushes "+" to the far right */
+}
+
+.add-prize-btn {
+  color: white;
+  font-size: 1.6rem;
+  font-weight: 600;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0 10px;
+  border-radius: 8px;
+  transition: 0.2s;
+}
+
+.add-prize-btn:hover {
+  background: rgba(255, 255, 255, 0);
+  transform: scale(1.1);
+}
+
